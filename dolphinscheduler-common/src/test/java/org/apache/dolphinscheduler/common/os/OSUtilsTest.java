@@ -19,6 +19,8 @@ package org.apache.dolphinscheduler.common.os;
 
 import org.apache.dolphinscheduler.common.utils.OSUtils;
 
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -51,5 +53,11 @@ public class OSUtilsTest {
         double cpuUsage = OSUtils.cpuUsage();
         logger.info("cpuUsage : {}", cpuUsage);
         Assert.assertTrue(cpuUsage >= 0.0);
+    }
+
+    @Test
+    public void getUserFromLinux() {
+        List<String> ds = OSUtils.getUserFromLinux("ds");
+        System.out.println(ds.contains("ds"));
     }
 }

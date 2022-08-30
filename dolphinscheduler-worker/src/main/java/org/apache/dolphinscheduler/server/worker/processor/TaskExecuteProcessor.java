@@ -130,7 +130,8 @@ public class TaskExecuteProcessor implements NettyRequestProcessor {
             }
 
             // check if the OS user exists
-            if (!OSUtils.getUserList().contains(taskExecutionContext.getTenantCode())) {
+            //if (!OSUtils.getUserList().contains(taskExecutionContext.getTenantCode())) {
+            if (!OSUtils.getUserList(taskExecutionContext.getTenantCode())) {
                 logger.error("tenantCode: {} does not exist, taskInstanceId: {}",
                         taskExecutionContext.getTenantCode(), taskExecutionContext.getTaskInstanceId());
                 TaskExecutionContextCacheManager.removeByTaskInstanceId(taskExecutionContext.getTaskInstanceId());

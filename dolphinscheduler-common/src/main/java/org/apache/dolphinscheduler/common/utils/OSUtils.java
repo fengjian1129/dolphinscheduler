@@ -35,7 +35,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -172,6 +174,22 @@ public class OSUtils {
         return Collections.emptyList();
     }
 
+    public static boolean getUserList(String userName) {
+        try {
+            if (SystemUtils.IS_OS_MAC) {
+                return getUserListFromMac().contains(userName);
+            } else if (SystemUtils.IS_OS_WINDOWS) {
+                return getUserListFromWindows().contains(userName);
+            } else {
+                return !getUserFromLinux(userName).isEmpty();
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+
+        return false;
+    }
+
     /**
      * get user list from linux
      *
@@ -192,6 +210,31 @@ public class OSUtils {
             }
         }
 
+        return userList;
+    }
+
+    /**
+     * get user list from Linux another method
+     * @return user list
+     */
+    public static List<String> getUserFromLinux(String userName) {
+        String cmd = String.format("id %s",userName);
+        List<String> userList = new ArrayList<>();
+        try {
+            String result = exeCmd(cmd);
+
+            if (StringUtils.isNotEmpty(result) && !result.contains("no such user")) {
+                List<String> userInfos = Arrays.asList(result.split("\\s"));
+                Pattern pattern = Pattern.compile(".*\\((.*)\\)");
+                Matcher matcher = pattern.matcher(userInfos.get(0));
+                while (matcher.find()) {
+                    userList.add(matcher.group(1));
+                }
+            }
+
+        } catch (IOException e) {
+            logger.error("get user from linux failed , message:[{}],exception :{}",e.getMessage(),e);
+        }
         return userList;
     }
 
