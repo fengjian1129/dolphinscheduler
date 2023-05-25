@@ -12,14 +12,21 @@ it will call `Zeppelin Client API` to trigger zeppelin notebook paragraph. Click
 
 ## Task Parameters
 
-- Please refer to [DolphinScheduler Task Parameters Appendix](appendix.md#default-task-parameters) for default parameters.
+[//]: # (TODO: use the commented anchor below once our website template supports this syntax)
+[//]: # (- Please refer to [DolphinScheduler Task Parameters Appendix]&#40;appendix.md#default-task-parameters&#41; `Default Task Parameters` section for default parameters.)
+
+- Please refer to [DolphinScheduler Task Parameters Appendix](appendix.md) `Default Task Parameters` section for default parameters.
 
 |           **Parameter**            |                                                          **Description**                                                           |
 |------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
 | Zeppelin Note ID                   | The unique note id for a zeppelin notebook note.                                                                                   |
 | Zeppelin Paragraph ID              | The unique paragraph id for a zeppelin notebook paragraph. If you want to schedule a whole note at a time, leave this field blank. |
 | Zeppelin Production Note Directory | The directory for cloned note in production mode.                                                                                  |
-| Zeppelin Rest Endpoint             | The REST endpoint of your zeppelin server                                                                                          |
+| Zeppelin username                  | the login username of your zeppelin server .                                                                                       |
+|                                    |
+| Zeppelin password                  | the login password of your zeppelin server .                                                                                       |
+|                                    |
+| Zeppelin Rest Endpoint             | The REST endpoint of your zeppelin server .                                                                                        |
 | Zeppelin Parameters                | Parameters in json format used for zeppelin dynamic form.                                                                          |
 
 ## Production (Clone) Mode

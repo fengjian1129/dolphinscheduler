@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { omit, cloneDeep } from 'lodash'
+import { omit } from 'lodash'
 import type {
   INodeData,
   ITaskData,
@@ -23,7 +23,7 @@ import type {
   ISqoopTargetParams,
   ISqoopSourceParams,
   ILocalParam,
-  IDependTask
+  IDependentParameters
 } from './types'
 
 export function formatParams(data: INodeData): {
@@ -42,7 +42,7 @@ export function formatParams(data: INodeData): {
     taskParams.jvmArgs = data.jvmArgs
     taskParams.isModulePath = data.isModulePath
     if (data.runType === 'JAR' && data.mainJar) {
-      taskParams.mainJar = { id: data.mainJar }
+      taskParams.mainJar = { resourceName: data.mainJar }
     }
   }
 
@@ -53,12 +53,15 @@ export function formatParams(data: INodeData): {
     taskParams.programType = data.programType
     taskParams.mainClass = data.mainClass
     if (data.mainJar) {
-      taskParams.mainJar = { id: data.mainJar }
+      taskParams.mainJar = { resourceName: data.mainJar }
     }
     taskParams.deployMode = data.deployMode
     taskParams.appName = data.appName
     taskParams.mainArgs = data.mainArgs
     taskParams.others = data.others
+    if (data.namespace) {
+      taskParams.namespace = data.namespace
+    }
   }
 
   if (data.taskType === 'SPARK') {
@@ -199,6 +202,10 @@ export function formatParams(data: INodeData): {
       if (data.udfs) taskParams.udfs = data.udfs.join(',')
       taskParams.connParams = data.connParams
     }
+
+    if (data.type === 'KYUUBI') {
+      if (data.udfs) taskParams.udfs = data.udfs.join(',')
+    }
   }
 
   if (data.taskType === 'PROCEDURE') {
@@ -208,21 +215,21 @@ export function formatParams(data: INodeData): {
   }
 
   if (data.taskType === 'SEATUNNEL') {
-    taskParams.engine = data.engine
+    taskParams.startupScript = data.startupScript
     taskParams.useCustom = data.useCustom
     taskParams.rawScript = data.rawScript
-    switch (data.engine) {
-      case 'FLINK':
-        taskParams.runMode = data.runMode
-        taskParams.others = data.others
-        break
-      case 'SPARK':
-        taskParams.deployMode = data.deployMode
-        taskParams.master = data.master
-        taskParams.masterUrl = data.masterUrl
-        break
-      default:
-        break
+    if (data.startupScript?.includes('flink')) {
+      taskParams.runMode = data.runMode
+      taskParams.others = data.others
+    }
+    if (data.startupScript?.includes('spark')) {
+      taskParams.deployMode = data.deployMode
+      taskParams.master = data.master
+      taskParams.masterUrl = data.masterUrl
+    }
+    if (data.startupScript === 'seatunnel.sh') {
+      taskParams.deployMode = data.deployMode
+      taskParams.others = data.others
     }
   }
 
@@ -270,21 +277,12 @@ export function formatParams(data: INodeData): {
     taskParams.xmx = data.xmx
   }
   if (data.taskType === 'DEPENDENT') {
-    const dependTaskList = cloneDeep(data.dependTaskList)?.map(
-      (taskItem: IDependTask) => {
-        if (taskItem.dependItemList?.length) {
-          taskItem.dependItemList.forEach((dependItem) => {
-            delete dependItem.definitionCodeOptions
-            delete dependItem.depTaskCodeOptions
-            delete dependItem.dateOptions
-          })
-        }
-        return taskItem
-      }
-    )
     taskParams.dependence = {
+      checkInterval: data.checkInterval,
+      failurePolicy: data.failurePolicy,
+      failureWaitingTime: data.failureWaitingTime,
       relation: data.relation,
-      dependTaskList: dependTaskList
+      dependTaskList: data.dependTaskList
     }
   }
   if (data.taskType === 'DATA_QUALITY') {
@@ -338,6 +336,8 @@ export function formatParams(data: INodeData): {
     taskParams.noteId = data.noteId
     taskParams.paragraphId = data.paragraphId
     taskParams.restEndpoint = data.restEndpoint
+    taskParams.username = data.username
+    taskParams.password = data.password
     taskParams.productionNoteDirectory = data.productionNoteDirectory
     taskParams.parameters = data.parameters
   }
@@ -347,6 +347,9 @@ export function formatParams(data: INodeData): {
     taskParams.minCpuCores = data.minCpuCores
     taskParams.minMemorySpace = data.minMemorySpace
     taskParams.image = data.image
+    taskParams.command = data.command
+    taskParams.args = data.args
+    taskParams.customizedLabels = data.customizedLabels
   }
 
   if (data.taskType === 'JUPYTER') {
@@ -446,6 +449,37 @@ export function formatParams(data: INodeData): {
     taskParams.replicationTaskArn = data.replicationTaskArn
   }
 
+  if (data.taskType === 'DATASYNC') {
+    taskParams.jsonFormat = data.jsonFormat
+    taskParams.json = data.json
+    taskParams.destinationLocationArn = data.destinationLocationArn
+    taskParams.sourceLocationArn = data.sourceLocationArn
+    taskParams.name = data.name
+    taskParams.cloudWatchLogGroupArn = data.cloudWatchLogGroupArn
+  }
+
+  if (data.taskType === 'KUBEFLOW') {
+    taskParams.yamlContent = data.yamlContent
+    taskParams.namespace = data.namespace
+  }
+
+  if (data.taskType === 'LINKIS') {
+    taskParams.useCustom = data.useCustom
+    taskParams.paramScript = data.paramScript
+    taskParams.rawScript = data.rawScript
+  }
+
+  if (data.taskType === 'DATA_FACTORY') {
+    taskParams.factoryName = data.factoryName
+    taskParams.resourceGroupName = data.resourceGroupName
+    taskParams.pipelineName = data.pipelineName
+  }
+
+  if (data.taskType === 'REMOTESHELL') {
+    taskParams.type = data.type
+    taskParams.datasource = data.datasource
+  }
+
   let timeoutNotifyStrategy = ''
   if (data.timeoutNotifyStrategy) {
     if (data.timeoutNotifyStrategy.length === 1) {
@@ -468,6 +502,7 @@ export function formatParams(data: INodeData): {
         : '0',
       failRetryTimes: data.failRetryTimes ? String(data.failRetryTimes) : '0',
       flag: data.flag,
+      isCache: data.isCache ? 'YES' : 'NO',
       name: data.name,
       taskGroupId: data.taskGroupId,
       taskGroupPriority: data.taskGroupPriority,
@@ -479,7 +514,9 @@ export function formatParams(data: INodeData): {
         initScript: data.initScript,
         rawScript: data.rawScript,
         resourceList: data.resourceList?.length
-          ? data.resourceList.map((id: number) => ({ id }))
+          ? data.resourceList.map((fullName: string) => ({
+              resourceName: `${fullName}`
+            }))
           : [],
         ...taskParams
       },
@@ -502,7 +539,6 @@ export function formatParams(data: INodeData): {
     params.taskDefinitionJsonObj.timeout = 0
     params.taskDefinitionJsonObj.timeoutNotifyStrategy = ''
   }
-
   return params
 }
 
@@ -517,6 +553,7 @@ export function formatModel(data: ITaskData) {
     ...omit(data.taskParams, ['resourceList', 'mainJar', 'localParams']),
     environmentCode: data.environmentCode === -1 ? null : data.environmentCode,
     timeoutFlag: data.timeoutFlag === 'OPEN',
+    isCache: data.isCache === 'YES',
     timeoutNotifyStrategy: data.timeoutNotifyStrategy
       ? [data.timeoutNotifyStrategy]
       : [],
@@ -528,11 +565,11 @@ export function formatModel(data: ITaskData) {
   }
   if (data.taskParams?.resourceList) {
     params.resourceList = data.taskParams.resourceList.map(
-      (item: { id: number }) => item.id
+      (item: { resourceName: string }) => `${item.resourceName}`
     )
   }
   if (data.taskParams?.mainJar) {
-    params.mainJar = data.taskParams?.mainJar.id
+    params.mainJar = data.taskParams?.mainJar.resourceName
   }
 
   if (data.taskParams?.method) {
@@ -618,9 +655,16 @@ export function formatModel(data: ITaskData) {
   }
 
   if (data.taskParams?.dependence) {
-    params.dependTaskList = data.taskParams?.dependence.dependTaskList || []
-    params.relation = data.taskParams?.dependence.relation
+    const dependence: IDependentParameters = JSON.parse(
+      JSON.stringify(data.taskParams.dependence)
+    )
+    params.checkInterval = dependence.checkInterval
+    params.failurePolicy = dependence.failurePolicy
+    params.failureWaitingTime = dependence.failureWaitingTime
+    params.dependTaskList = dependence.dependTaskList || []
+    params.relation = dependence.relation
   }
+
   if (data.taskParams?.ruleInputParameter) {
     params.check_type = data.taskParams.ruleInputParameter.check_type
     params.comparison_execute_sql =

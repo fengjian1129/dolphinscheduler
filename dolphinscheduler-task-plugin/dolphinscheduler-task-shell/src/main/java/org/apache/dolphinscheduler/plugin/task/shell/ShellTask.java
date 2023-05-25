@@ -17,12 +17,12 @@
 
 package org.apache.dolphinscheduler.plugin.task.shell;
 
-import org.apache.commons.lang3.SystemUtils;
+import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.EXIT_CODE_FAILURE;
 
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.task.api.AbstractTask;
 import org.apache.dolphinscheduler.plugin.task.api.ShellCommandExecutor;
 import org.apache.dolphinscheduler.plugin.task.api.TaskCallBack;
-import org.apache.dolphinscheduler.plugin.task.api.TaskConstants;
 import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
@@ -30,21 +30,15 @@ import org.apache.dolphinscheduler.plugin.task.api.model.TaskResponse;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.parser.ParamUtils;
 import org.apache.dolphinscheduler.plugin.task.api.parser.ParameterUtils;
-import org.apache.dolphinscheduler.spi.utils.JSONUtils;
+import org.apache.dolphinscheduler.plugin.task.api.utils.FileUtils;
+
+import org.apache.commons.lang3.SystemUtils;
 
 import java.io.File;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Map;
-import java.util.Set;
-
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.EXIT_CODE_FAILURE;
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.RWXR_XR_X;
 
 /**
  * shell task
@@ -77,17 +71,17 @@ public class ShellTask extends AbstractTask {
         this.taskExecutionContext = taskExecutionContext;
         this.shellCommandExecutor = new ShellCommandExecutor(this::logHandle,
                 taskExecutionContext,
-                logger);
+                log);
     }
 
     @Override
     public void init() {
-        logger.info("shell task params {}", taskExecutionContext.getTaskParams());
 
         shellParameters = JSONUtils.parseObject(taskExecutionContext.getTaskParams(), ShellParameters.class);
+        log.info("Initialize shell task params {}", JSONUtils.toPrettyJsonString(shellParameters));
 
-        if (!shellParameters.checkParameters()) {
-            throw new RuntimeException("shell task params is not valid");
+        if (shellParameters == null || !shellParameters.checkParameters()) {
+            throw new TaskException("shell task params is not valid");
         }
     }
 
@@ -96,17 +90,17 @@ public class ShellTask extends AbstractTask {
         try {
             // construct process
             String command = buildCommand();
-            TaskResponse commandExecuteResult = shellCommandExecutor.run(command);
+            TaskResponse commandExecuteResult = shellCommandExecutor.run(command, taskCallBack);
             setExitStatusCode(commandExecuteResult.getExitStatusCode());
             setProcessId(commandExecuteResult.getProcessId());
             shellParameters.dealOutParam(shellCommandExecutor.getVarPool());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.error("The current Shell task has been interrupted", e);
+            log.error("The current Shell task has been interrupted", e);
             setExitStatusCode(EXIT_CODE_FAILURE);
             throw new TaskException("The current Shell task has been interrupted", e);
         } catch (Exception e) {
-            logger.error("shell task error", e);
+            log.error("shell task error", e);
             setExitStatusCode(EXIT_CODE_FAILURE);
             throw new TaskException("Execute shell task error", e);
         }
@@ -138,32 +132,19 @@ public class ShellTask extends AbstractTask {
         Path path = file.toPath();
 
         if (Files.exists(path)) {
+            // this shouldn't happen
+            log.warn("The command file: {} is already exist", path);
             return fileName;
         }
 
-        String script = shellParameters.getRawScript().replaceAll("\\r\\n", "\n");
+        String script = shellParameters.getRawScript().replaceAll("\\r\\n", System.lineSeparator());
         script = parseScript(script);
         shellParameters.setRawScript(script);
 
-        logger.info("raw script : {}", shellParameters.getRawScript());
-        logger.info("task execute path : {}", taskExecutionContext.getExecutePath());
+        log.info("raw script : {}", shellParameters.getRawScript());
+        log.info("task execute path : {}", taskExecutionContext.getExecutePath());
 
-        Set<PosixFilePermission> perms = PosixFilePermissions.fromString(RWXR_XR_X);
-        FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(perms);
-
-        if (SystemUtils.IS_OS_WINDOWS) {
-            Files.createFile(path);
-        } else {
-            if (!file.getParentFile().exists()) {
-                file.getParentFile().mkdirs();
-            }
-            try {
-                Files.createFile(path, attr);
-            } catch (FileAlreadyExistsException ex) {
-                // this is expected
-            }
-        }
-
+        FileUtils.createFileWith755(path);
         Files.write(path, shellParameters.getRawScript().getBytes(), StandardOpenOption.APPEND);
 
         return fileName;

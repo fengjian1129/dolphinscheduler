@@ -20,8 +20,9 @@ package org.apache.dolphinscheduler.server.master.event;
 import org.apache.dolphinscheduler.common.enums.StateEventType;
 import org.apache.dolphinscheduler.common.enums.TaskEventType;
 import org.apache.dolphinscheduler.dao.entity.TaskInstance;
+import org.apache.dolphinscheduler.dao.repository.TaskInstanceDao;
 import org.apache.dolphinscheduler.dao.utils.TaskInstanceUtils;
-import org.apache.dolphinscheduler.remote.command.TaskExecuteAckCommand;
+import org.apache.dolphinscheduler.remote.command.task.TaskExecuteResultMessageAck;
 import org.apache.dolphinscheduler.server.master.cache.ProcessInstanceExecCacheManager;
 import org.apache.dolphinscheduler.server.master.config.MasterConfig;
 import org.apache.dolphinscheduler.server.master.processor.queue.TaskEvent;
@@ -34,6 +35,8 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import io.netty.channel.Channel;
 
 @Component
 public class TaskResultEventHandler implements TaskEventHandler {
@@ -49,6 +52,9 @@ public class TaskResultEventHandler implements TaskEventHandler {
 
     @Autowired
     private ProcessService processService;
+
+    @Autowired
+    private TaskInstanceDao taskInstanceDao;
 
     @Autowired
     private MasterConfig masterConfig;
@@ -92,7 +98,7 @@ public class TaskResultEventHandler implements TaskEventHandler {
             taskInstance.setEndTime(taskEvent.getEndTime());
             taskInstance.setVarPool(taskEvent.getVarPool());
             processService.changeOutParam(taskInstance);
-            processService.updateTaskInstance(taskInstance);
+            taskInstanceDao.updateTaskInstance(taskInstance);
             sendAckToWorker(taskEvent);
         } catch (Exception ex) {
             TaskInstanceUtils.copyTaskInstance(oldTaskInstance, taskInstance);
@@ -109,13 +115,17 @@ public class TaskResultEventHandler implements TaskEventHandler {
     }
 
     public void sendAckToWorker(TaskEvent taskEvent) {
+        Channel channel = taskEvent.getChannel();
+        if (channel == null) {
+            return;
+        }
         // we didn't set the receiver address, since the ack doen's need to retry
-        TaskExecuteAckCommand taskExecuteAckMessage = new TaskExecuteAckCommand(true,
+        TaskExecuteResultMessageAck taskExecuteAckMessage = new TaskExecuteResultMessageAck(true,
                 taskEvent.getTaskInstanceId(),
                 masterConfig.getMasterAddress(),
                 taskEvent.getWorkerAddress(),
                 System.currentTimeMillis());
-        taskEvent.getChannel().writeAndFlush(taskExecuteAckMessage.convert2Command());
+        channel.writeAndFlush(taskExecuteAckMessage.convert2Command());
     }
 
     @Override

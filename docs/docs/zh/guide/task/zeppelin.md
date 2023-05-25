@@ -12,13 +12,18 @@
 
 ## 任务参数
 
-- 默认参数说明请参考[DolphinScheduler任务参数附录](appendix.md#默认任务参数)。
+[//]: # (TODO: use the commented anchor below once our website template supports this syntax)
+[//]: # (- 默认参数说明请参考[DolphinScheduler任务参数附录]&#40;appendix.md#默认任务参数&#41;`默认任务参数`一栏。)
+
+- 默认参数说明请参考[DolphinScheduler任务参数附录](appendix.md)`默认任务参数`一栏。
 
 |              **任务参数**              |                      **描述**                       |
 |------------------------------------|---------------------------------------------------|
 | Zeppelin Note ID                   | Zeppelin Note对应的唯一ID                              |
 | Zeppelin Paragraph ID              | Zeppelin Paragraph对应的唯一ID。如果你想一次性调度整个note，这一栏不填即可 |
 | Zeppelin Rest Endpoint             | 您的Zeppelin服务的REST Endpoint                        |
+| Zeppelin username                  | 您的Zeppelin服务的登陆用户名                                |
+| Zeppelin password                  | 您的Zeppelin服务的登陆密码                                 |
 | Zeppelin Production Note Directory | 生产模式下存放克隆note的目录                                  |
 | Zeppelin Parameters                | 用于传入Zeppelin Dynamic Form的参数                      |
 

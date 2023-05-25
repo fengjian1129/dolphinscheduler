@@ -15,10 +15,13 @@ Flink task type, used to execute Flink programs. For Flink nodes:
 
 ## Task Parameters
 
-- Please refer to [DolphinScheduler Task Parameters Appendix](appendix.md#default-task-parameters) for default parameters.
+[//]: # (TODO: use the commented anchor below once our website template supports this syntax)
+[//]: # (- Please refer to [DolphinScheduler Task Parameters Appendix]&#40;appendix.md#default-task-parameters&#41; `Default Task Parameters` section for default parameters.)
+
+- Please refer to [DolphinScheduler Task Parameters Appendix](appendix.md) `Default Task Parameters` section for default parameters.
 
 |      **Parameter**      |                                                                                                                             **Description**                                                                                                                             |
-|-------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---|
+|-------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Program type            | Support Java, Scala, Python and SQL four languages.                                                                                                                                                                                                                     |
 | Class of main function  | The **full path** of Main Class, the entry point of the Flink program.                                                                                                                                                                                                  |
 | Main jar package        | The jar package of the Flink program (upload by Resource Center).                                                                                                                                                                                                       |
@@ -33,7 +36,7 @@ Flink task type, used to execute Flink programs. For Flink nodes:
 | Number of TaskManager   | Used to set the number of taskManagers, which can be set according to the actual production environment.                                                                                                                                                                |
 | Parallelism             | Used to set the degree of parallelism for executing Flink tasks.                                                                                                                                                                                                        |
 | Main program parameters | Set the input parameters for the Flink program and support the substitution of custom parameter variables.                                                                                                                                                              |
-| Optional parameters     | Support `--jar`, `--files`,` --archives`, `--conf` format.                                                                                                                                                                                                              |   |
+| Optional parameters     | Support `--jar`, `--files`,` --archives`, `--conf` format.                                                                                                                                                                                                              |
 | Custom parameter        | It is a local user-defined parameter for Flink, and will replace the content with `${variable}` in the script.                                                                                                                                                          |
 
 ## Task Example

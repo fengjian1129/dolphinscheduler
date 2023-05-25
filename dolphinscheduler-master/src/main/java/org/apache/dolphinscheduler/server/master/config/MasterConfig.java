@@ -17,31 +17,30 @@
 
 package org.apache.dolphinscheduler.server.master.config;
 
-import lombok.Data;
 import org.apache.dolphinscheduler.common.utils.NetUtils;
 import org.apache.dolphinscheduler.registry.api.ConnectStrategyProperties;
+import org.apache.dolphinscheduler.registry.api.enums.RegistryNodeType;
 import org.apache.dolphinscheduler.server.master.dispatch.host.assign.HostSelector;
 import org.apache.dolphinscheduler.server.master.processor.queue.TaskExecuteRunnable;
 import org.apache.dolphinscheduler.server.master.runner.WorkflowExecuteRunnable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import org.springframework.validation.annotation.Validated;
 
-import java.time.Duration;
-
-import static org.apache.dolphinscheduler.common.Constants.REGISTRY_DOLPHINSCHEDULER_MASTERS;
-
 @Data
 @Validated
 @Configuration
 @ConfigurationProperties(prefix = "master")
+@Slf4j
 public class MasterConfig implements Validator {
-
-    private Logger logger = LoggerFactory.getLogger(MasterConfig.class);
 
     /**
      * The master RPC server listen port.
@@ -61,6 +60,11 @@ public class MasterConfig implements Validator {
      * Will create two thread poll to execute {@link WorkflowExecuteRunnable} and {@link TaskExecuteRunnable}.
      */
     private int execThreads = 10;
+
+    // todo: change to sync thread pool/ async thread pool ?
+    private int masterTaskExecuteThreadPoolSize = Runtime.getRuntime().availableProcessors();
+
+    private int masterAsyncTaskStateCheckThreadPoolSize = Runtime.getRuntime().availableProcessors();
     /**
      * The task dispatch thread pool size.
      */
@@ -85,11 +89,13 @@ public class MasterConfig implements Validator {
      * state wheel check interval, if this value is bigger, may increase the delay of task/processInstance.
      */
     private Duration stateWheelInterval = Duration.ofMillis(5);
-    private double maxCpuLoadAvg = -1;
-    private double reservedMemory = 0.3;
+    private double maxCpuLoadAvg = 1;
+    private double reservedMemory = 0.1;
     private Duration failoverInterval = Duration.ofMinutes(10);
-    private boolean killYarnJobWhenTaskFailover = true;
+    private boolean killApplicationWhenTaskFailover = true;
     private ConnectStrategyProperties registryDisconnectStrategy = new ConnectStrategyProperties();
+
+    private Duration workerGroupRefreshInterval = Duration.ofSeconds(10L);
 
     // ip:listenPort
     private String masterAddress;
@@ -136,30 +142,40 @@ public class MasterConfig implements Validator {
             errors.rejectValue("failover-interval", null, "should be a valid duration");
         }
         if (masterConfig.getMaxCpuLoadAvg() <= 0) {
-            masterConfig.setMaxCpuLoadAvg(Runtime.getRuntime().availableProcessors() * 2);
+            masterConfig.setMaxCpuLoadAvg(100);
         }
+        if (masterConfig.getReservedMemory() <= 0) {
+            masterConfig.setReservedMemory(100);
+        }
+
+        if (masterConfig.getWorkerGroupRefreshInterval().getSeconds() < 10) {
+            errors.rejectValue("worker-group-refresh-interval", null, "should >= 10s");
+        }
+
         masterConfig.setMasterAddress(NetUtils.getAddr(masterConfig.getListenPort()));
-        masterConfig.setMasterRegistryPath(REGISTRY_DOLPHINSCHEDULER_MASTERS + "/" + masterConfig.getMasterAddress());
+        masterConfig.setMasterRegistryPath(
+                RegistryNodeType.MASTER.getRegistryPath() + "/" + masterConfig.getMasterAddress());
         printConfig();
     }
 
     private void printConfig() {
-        logger.info("Master config: listenPort -> {} ", listenPort);
-        logger.info("Master config: fetchCommandNum -> {} ", fetchCommandNum);
-        logger.info("Master config: preExecThreads -> {} ", preExecThreads);
-        logger.info("Master config: execThreads -> {} ", execThreads);
-        logger.info("Master config: dispatchTaskNumber -> {} ", dispatchTaskNumber);
-        logger.info("Master config: hostSelector -> {} ", hostSelector);
-        logger.info("Master config: heartbeatInterval -> {} ", heartbeatInterval);
-        logger.info("Master config: taskCommitRetryTimes -> {} ", taskCommitRetryTimes);
-        logger.info("Master config: taskCommitInterval -> {} ", taskCommitInterval);
-        logger.info("Master config: stateWheelInterval -> {} ", stateWheelInterval);
-        logger.info("Master config: maxCpuLoadAvg -> {} ", maxCpuLoadAvg);
-        logger.info("Master config: reservedMemory -> {} ", reservedMemory);
-        logger.info("Master config: failoverInterval -> {} ", failoverInterval);
-        logger.info("Master config: killYarnJobWhenTaskFailover -> {} ", killYarnJobWhenTaskFailover);
-        logger.info("Master config: registryDisconnectStrategy -> {} ", registryDisconnectStrategy);
-        logger.info("Master config: masterAddress -> {} ", masterAddress);
-        logger.info("Master config: masterRegistryPath -> {} ", masterRegistryPath);
+        log.info("Master config: listenPort -> {} ", listenPort);
+        log.info("Master config: fetchCommandNum -> {} ", fetchCommandNum);
+        log.info("Master config: preExecThreads -> {} ", preExecThreads);
+        log.info("Master config: execThreads -> {} ", execThreads);
+        log.info("Master config: dispatchTaskNumber -> {} ", dispatchTaskNumber);
+        log.info("Master config: hostSelector -> {} ", hostSelector);
+        log.info("Master config: heartbeatInterval -> {} ", heartbeatInterval);
+        log.info("Master config: taskCommitRetryTimes -> {} ", taskCommitRetryTimes);
+        log.info("Master config: taskCommitInterval -> {} ", taskCommitInterval);
+        log.info("Master config: stateWheelInterval -> {} ", stateWheelInterval);
+        log.info("Master config: maxCpuLoadAvg -> {} ", maxCpuLoadAvg);
+        log.info("Master config: reservedMemory -> {} ", reservedMemory);
+        log.info("Master config: failoverInterval -> {} ", failoverInterval);
+        log.info("Master config: killApplicationWhenTaskFailover -> {} ", killApplicationWhenTaskFailover);
+        log.info("Master config: registryDisconnectStrategy -> {} ", registryDisconnectStrategy);
+        log.info("Master config: masterAddress -> {} ", masterAddress);
+        log.info("Master config: masterRegistryPath -> {} ", masterRegistryPath);
+        log.info("Master config: workerGroupRefreshInterval -> {} ", workerGroupRefreshInterval);
     }
 }

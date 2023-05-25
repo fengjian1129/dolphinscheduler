@@ -17,15 +17,13 @@
 
 package org.apache.dolphinscheduler.server.master.runner;
 
-import org.apache.dolphinscheduler.common.utils.LoggerUtils;
-import org.apache.dolphinscheduler.remote.processor.StateEventCallbackService;
+import org.apache.dolphinscheduler.plugin.task.api.utils.LogUtils;
 import org.apache.dolphinscheduler.server.master.config.MasterConfig;
-import org.apache.dolphinscheduler.service.process.ProcessService;
 
 import javax.annotation.PostConstruct;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
@@ -36,9 +34,8 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
  * Used to execute {@link StreamTaskExecuteRunnable}.
  */
 @Component
+@Slf4j
 public class StreamTaskExecuteThreadPool extends ThreadPoolTaskExecutor {
-
-    private static final Logger logger = LoggerFactory.getLogger(StreamTaskExecuteThreadPool.class);
 
     @Autowired
     private MasterConfig masterConfig;
@@ -61,18 +58,19 @@ public class StreamTaskExecuteThreadPool extends ThreadPoolTaskExecutor {
         int taskInstanceId = streamTaskExecuteRunnable.getTaskInstance().getId();
         ListenableFuture<?> future = this.submitListenable(streamTaskExecuteRunnable::handleEvents);
         future.addCallback(new ListenableFutureCallback() {
+
             @Override
             public void onFailure(Throwable ex) {
-                LoggerUtils.setTaskInstanceIdMDC(taskInstanceId);
-                logger.error("Stream task instance events handle failed", ex);
-                LoggerUtils.removeTaskInstanceIdMDC();
+                LogUtils.setTaskInstanceIdMDC(taskInstanceId);
+                log.error("Stream task instance events handle failed", ex);
+                LogUtils.removeTaskInstanceIdMDC();
             }
 
             @Override
             public void onSuccess(Object result) {
-                LoggerUtils.setTaskInstanceIdMDC(taskInstanceId);
-                logger.info("Stream task instance is finished.");
-                LoggerUtils.removeTaskInstanceIdMDC();
+                LogUtils.setTaskInstanceIdMDC(taskInstanceId);
+                log.info("Stream task instance is finished.");
+                LogUtils.removeTaskInstanceIdMDC();
             }
         });
     }

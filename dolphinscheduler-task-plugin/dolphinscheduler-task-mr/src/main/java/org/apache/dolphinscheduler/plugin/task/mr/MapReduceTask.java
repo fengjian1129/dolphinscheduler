@@ -17,19 +17,16 @@
 
 package org.apache.dolphinscheduler.plugin.task.mr;
 
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.task.api.AbstractYarnTask;
 import org.apache.dolphinscheduler.plugin.task.api.TaskConstants;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
-import org.apache.dolphinscheduler.plugin.task.api.model.ResourceInfo;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.parser.ParamUtils;
 import org.apache.dolphinscheduler.plugin.task.api.parser.ParameterUtils;
-import org.apache.dolphinscheduler.plugin.task.api.utils.MapUtils;
-import org.apache.dolphinscheduler.spi.utils.JSONUtils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,9 +63,8 @@ public class MapReduceTask extends AbstractYarnTask {
     @Override
     public void init() {
 
-        logger.info("mapreduce task params {}", taskExecutionContext.getTaskParams());
-
-        this.mapreduceParameters = JSONUtils.parseObject(taskExecutionContext.getTaskParams(), MapReduceParameters.class);
+        this.mapreduceParameters =
+                JSONUtils.parseObject(taskExecutionContext.getTaskParams(), MapReduceParameters.class);
 
         // check parameters
         if (mapreduceParameters == null || !mapreduceParameters.checkParameters()) {
@@ -76,17 +72,20 @@ public class MapReduceTask extends AbstractYarnTask {
         }
 
         mapreduceParameters.setQueue(taskExecutionContext.getQueue());
-        setMainJarName();
 
         // replace placeholder,and combine local and global parameters
         Map<String, Property> paramsMap = taskExecutionContext.getPrepareParamsMap();
 
-        String args = ParameterUtils.convertParameterPlaceholders(mapreduceParameters.getMainArgs(),  ParamUtils.convert(paramsMap));
+        String args = ParameterUtils.convertParameterPlaceholders(mapreduceParameters.getMainArgs(),
+                ParamUtils.convert(paramsMap));
         mapreduceParameters.setMainArgs(args);
-        if (mapreduceParameters.getProgramType() != null && mapreduceParameters.getProgramType() == ProgramType.PYTHON) {
-            String others = ParameterUtils.convertParameterPlaceholders(mapreduceParameters.getOthers(),  ParamUtils.convert(paramsMap));
+        if (mapreduceParameters.getProgramType() != null
+                && mapreduceParameters.getProgramType() == ProgramType.PYTHON) {
+            String others = ParameterUtils.convertParameterPlaceholders(mapreduceParameters.getOthers(),
+                    ParamUtils.convert(paramsMap));
             mapreduceParameters.setOthers(others);
         }
+        log.info("Initialize mapreduce task params {}", JSONUtils.toPrettyJsonString(mapreduceParameters));
     }
 
     /**
@@ -100,22 +99,13 @@ public class MapReduceTask extends AbstractYarnTask {
         args.add(MAPREDUCE_COMMAND);
 
         // other parameters
-        args.addAll(MapReduceArgsUtils.buildArgs(mapreduceParameters));
+        args.addAll(MapReduceArgsUtils.buildArgs(mapreduceParameters, taskExecutionContext));
 
         String command = ParameterUtils.convertParameterPlaceholders(String.join(" ", args),
                 taskExecutionContext.getDefinedParams());
-        logger.info("mapreduce task command: {}", command);
+        log.info("mapreduce task command: {}", command);
 
         return command;
-    }
-
-    @Override
-    protected void setMainJarName() {
-        // main jar
-        ResourceInfo mainJar = mapreduceParameters.getMainJar();
-        String resourceName = getResourceNameOfMainJar(mainJar);
-        mainJar.setRes(resourceName);
-        mapreduceParameters.setMainJar(mainJar);
     }
 
     @Override

@@ -17,26 +17,36 @@
 
 package org.apache.dolphinscheduler.server.worker.runner;
 
-import lombok.NonNull;
-import org.apache.dolphinscheduler.common.storage.StorageOperate;
+import org.apache.dolphinscheduler.plugin.storage.api.StorageOperate;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
+import org.apache.dolphinscheduler.plugin.task.api.TaskPluginManager;
 import org.apache.dolphinscheduler.server.worker.config.WorkerConfig;
+import org.apache.dolphinscheduler.server.worker.registry.WorkerRegistryClient;
 import org.apache.dolphinscheduler.server.worker.rpc.WorkerMessageSender;
-import org.apache.dolphinscheduler.service.alert.AlertClientService;
-import org.apache.dolphinscheduler.service.task.TaskPluginManager;
+import org.apache.dolphinscheduler.server.worker.rpc.WorkerRpcClient;
 
 import javax.annotation.Nullable;
 
-public class DefaultWorkerDelayTaskExecuteRunnableFactory extends WorkerDelayTaskExecuteRunnableFactory<DefaultWorkerDelayTaskExecuteRunnable> {
+import lombok.NonNull;
+
+public class DefaultWorkerDelayTaskExecuteRunnableFactory
+        extends
+            WorkerDelayTaskExecuteRunnableFactory<DefaultWorkerDelayTaskExecuteRunnable> {
 
     protected DefaultWorkerDelayTaskExecuteRunnableFactory(@NonNull TaskExecutionContext taskExecutionContext,
                                                            @NonNull WorkerConfig workerConfig,
-                                                           @NonNull String workflowMasterAddress,
                                                            @NonNull WorkerMessageSender workerMessageSender,
-                                                           @NonNull AlertClientService alertClientService,
+                                                           @NonNull WorkerRpcClient workerRpcClient,
                                                            @NonNull TaskPluginManager taskPluginManager,
-                                                           @Nullable StorageOperate storageOperate) {
-        super(taskExecutionContext, workerConfig, workflowMasterAddress, workerMessageSender, alertClientService, taskPluginManager, storageOperate);
+                                                           @Nullable StorageOperate storageOperate,
+                                                           @NonNull WorkerRegistryClient workerRegistryClient) {
+        super(taskExecutionContext,
+                workerConfig,
+                workerMessageSender,
+                workerRpcClient,
+                taskPluginManager,
+                storageOperate,
+                workerRegistryClient);
     }
 
     @Override
@@ -44,10 +54,10 @@ public class DefaultWorkerDelayTaskExecuteRunnableFactory extends WorkerDelayTas
         return new DefaultWorkerDelayTaskExecuteRunnable(
                 taskExecutionContext,
                 workerConfig,
-                workflowMasterAddress,
                 workerMessageSender,
-                alertClientService,
+                workerRpcClient,
                 taskPluginManager,
-                storageOperate);
+                storageOperate,
+                workerRegistryClient);
     }
 }

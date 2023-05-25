@@ -24,6 +24,7 @@ import com.alibaba.druid.sql.dialect.hive.parser.HiveStatementParser;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.dialect.oracle.parser.OracleStatementParser;
 import com.alibaba.druid.sql.dialect.postgresql.parser.PGSQLStatementParser;
+import com.alibaba.druid.sql.dialect.presto.parser.PrestoStatementParser;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerStatementParser;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
 
@@ -39,7 +40,7 @@ public class DataxUtils {
 
     public static final String DATAX_READER_PLUGIN_CLICKHOUSE = "clickhousereader";
 
-    public static final String DATAX_READER_PLUGIN_HIVE = "rdbmsreader";
+    public static final String DATAX_READER_PLUGIN_RDBMS = "rdbmsreader";
 
     public static final String DATAX_WRITER_PLUGIN_MYSQL = "mysqlwriter";
 
@@ -50,8 +51,9 @@ public class DataxUtils {
     public static final String DATAX_WRITER_PLUGIN_SQLSERVER = "sqlserverwriter";
 
     public static final String DATAX_WRITER_PLUGIN_CLICKHOUSE = "clickhousewriter";
+    public static final String DATAX_WRITER_PLUGIN_DATABEND = "databendwriter";
 
-    public static final String DATAX_WRITER_PLUGIN_HIVE = "rdbmswriter";
+    public static final String DATAX_WRITER_PLUGIN_RDBMS = "rdbmswriter";
 
     public static String getReaderPluginName(DbType dbType) {
         switch (dbType) {
@@ -66,7 +68,9 @@ public class DataxUtils {
             case CLICKHOUSE:
                 return DATAX_READER_PLUGIN_CLICKHOUSE;
             case HIVE:
-                return DATAX_READER_PLUGIN_HIVE;
+                return DATAX_READER_PLUGIN_RDBMS;
+            case PRESTO:
+                return DATAX_READER_PLUGIN_RDBMS;
             default:
                 return null;
         }
@@ -84,8 +88,12 @@ public class DataxUtils {
                 return DATAX_WRITER_PLUGIN_SQLSERVER;
             case CLICKHOUSE:
                 return DATAX_WRITER_PLUGIN_CLICKHOUSE;
+            case DATABEND:
+                return DATAX_WRITER_PLUGIN_DATABEND;
             case HIVE:
-                return DATAX_WRITER_PLUGIN_HIVE;
+                return DATAX_WRITER_PLUGIN_RDBMS;
+            case PRESTO:
+                return DATAX_WRITER_PLUGIN_RDBMS;
             default:
                 return null;
         }
@@ -105,6 +113,8 @@ public class DataxUtils {
                 return new ClickhouseStatementParser(sql);
             case HIVE:
                 return new HiveStatementParser(sql);
+            case PRESTO:
+                return new PrestoStatementParser(sql);
             default:
                 return null;
         }
@@ -141,8 +151,10 @@ public class DataxUtils {
             case ORACLE:
                 return String.format("\"%s\"", column);
             case SQLSERVER:
-                return String.format("`%s`", column);
+                return String.format("\"%s\"", column);
             case CLICKHOUSE:
+                return String.format("`%s`", column);
+            case DATABEND:
                 return String.format("`%s`", column);
             default:
                 return column;

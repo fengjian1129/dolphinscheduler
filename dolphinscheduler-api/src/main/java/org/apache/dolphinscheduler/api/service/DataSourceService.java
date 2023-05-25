@@ -55,7 +55,7 @@ public interface DataSourceService {
      * @param id datasource id
      * @return data source detail
      */
-    Map<String, Object> queryDataSource(int id);
+    Map<String, Object> queryDataSource(int id, User loginUser);
 
     /**
      * query datasource list by keyword
@@ -142,5 +142,5 @@ public interface DataSourceService {
      * @param tableName
      * @return
      */
-    Map<String, Object> getTableColumns(Integer datasourceId,String tableName);
+    Map<String, Object> getTableColumns(Integer datasourceId, String tableName);
 }

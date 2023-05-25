@@ -11,11 +11,17 @@ Dependent nodes are **dependency check nodes**. For example, process A depends o
 
 ## Task Parameter
 
-- Please refer to [DolphinScheduler Task Parameters Appendix](appendix.md#default-task-parameters) for default parameters.
+[//]: # (TODO: use the commented anchor below once our website template supports this syntax)
+[//]: # (- Please refer to [DolphinScheduler Task Parameters Appendix]&#40;appendix.md#default-task-parameters&#41; `Default Task Parameters` section for default parameters.)
 
-|  **Parameter**   |               **Description**               |
-|------------------|---------------------------------------------|
-| Predecessor Task | The upstream task of the current task node. |
+- Please refer to [DolphinScheduler Task Parameters Appendix](appendix.md) `Default Task Parameters` section for default parameters.
+
+|          **Parameter**          |                                                                            **Description**                                                                            |
+|---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Add Dependencies                | Configure dependent upstream tasks.                                                                                                                                   |
+| Check interval                  | Check the dependent upstream task status interval, the default is 10s.                                                                                                |
+| Dependency failure policy       | Failure: The dependent upstream task failure and the current task directly failure; Wait: The dependent upstream task failure and the current task continues to wait; |
+| Dependency failure waiting time | When the dependency failure policy chooses to wait, the current task wait time.                                                                                       |
 
 ## Task Examples
 

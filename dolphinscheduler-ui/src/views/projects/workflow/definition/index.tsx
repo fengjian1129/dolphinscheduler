@@ -20,7 +20,6 @@ import {
   NButton,
   NDataTable,
   NIcon,
-  NInput,
   NPagination,
   NSpace,
   NTooltip,
@@ -36,6 +35,7 @@ import {
 import { useI18n } from 'vue-i18n'
 import { useTable } from './use-table'
 import { useRouter, useRoute } from 'vue-router'
+import { useUISettingStore } from '@/store/ui-setting/ui-setting'
 import Card from '@/components/card'
 import ImportModal from './components/import-modal'
 import StartModal from './components/start-modal'
@@ -43,6 +43,7 @@ import TimingModal from './components/timing-modal'
 import VersionModal from './components/version-modal'
 import CopyModal from './components/copy-modal'
 import type { Router } from 'vue-router'
+import Search from '@/components/input-search'
 
 export default defineComponent({
   name: 'WorkflowDefinitionList',
@@ -50,6 +51,7 @@ export default defineComponent({
     const router: Router = useRouter()
     const route = useRoute()
     const projectCode = Number(route.params.projectCode)
+    const uiSettingStore = useUISettingStore()
 
     const {
       variables,
@@ -82,6 +84,15 @@ export default defineComponent({
       requestData()
     }
 
+    const onClearSearch = () => {
+      variables.page = 1
+      getTableData({
+        pageSize: variables.pageSize,
+        pageNo: variables.page,
+        searchVal: ''
+      })
+    }
+
     const handleChangePageSize = () => {
       variables.page = 1
       requestData()
@@ -92,6 +103,16 @@ export default defineComponent({
         path: `/projects/${projectCode}/workflow/definitions/create`
       })
     }
+
+    const createDefinitionDynamic = () => {
+      router.push({
+        path: `/projects/${projectCode}/workflow/definitions/create`,
+        query: {
+          dynamic: 'true'
+        }
+      })
+    }
+
     const trim = getCurrentInstance()?.appContext.config.globalProperties.trim
 
     watch(useI18n().locale, () => {
@@ -106,14 +127,17 @@ export default defineComponent({
     return {
       requestData,
       handleSearch,
+      onClearSearch,
       handleUpdateList,
       createDefinition,
+      createDefinitionDynamic,
       handleChangePageSize,
       batchDeleteWorkflow,
       batchExportWorkflow,
       batchCopyWorkflow,
       handleCopyUpdateList,
       ...toRefs(variables),
+      uiSettingStore,
       trim
     }
   },
@@ -134,6 +158,15 @@ export default defineComponent({
               >
                 {t('project.workflow.create_workflow')}
               </NButton>
+              {this.uiSettingStore.getDynamicTask && (
+                <NButton
+                  type='warning'
+                  size='small'
+                  onClick={this.createDefinitionDynamic}
+                >
+                  {t('project.workflow.create_workflow_dynamic')}
+                </NButton>
+              )}
               <NButton
                 strong
                 secondary
@@ -144,11 +177,11 @@ export default defineComponent({
               </NButton>
             </NSpace>
             <NSpace>
-              <NInput
-                allowInput={this.trim}
-                size='small'
+              <Search
                 placeholder={t('resource.function.enter_keyword_tips')}
-                v-model={[this.searchVal, 'value']}
+                v-model:value={this.searchVal}
+                onSearch={this.handleSearch}
+                onClear={this.onClearSearch}
               />
               <NButton type='primary' size='small' onClick={this.handleSearch}>
                 <NIcon>
@@ -174,7 +207,7 @@ export default defineComponent({
               <NSpace>
                 <NTooltip>
                   {{
-                    default: () => t('project.workflow.delete'),
+                    default: () => t('project.workflow.batch_delete'),
                     trigger: () => (
                       <NPopconfirm onPositiveClick={this.batchDeleteWorkflow}>
                         {{
@@ -187,7 +220,7 @@ export default defineComponent({
                               disabled={this.checkedRowKeys.length <= 0}
                               class='btn-delete-all'
                             >
-                              {t('project.workflow.delete')}
+                              {t('project.workflow.batch_delete')}
                             </NButton>
                           )
                         }}
@@ -197,7 +230,7 @@ export default defineComponent({
                 </NTooltip>
                 <NTooltip>
                   {{
-                    default: () => t('project.workflow.export'),
+                    default: () => t('project.workflow.batch_export'),
                     trigger: () => (
                       <NButton
                         tag='div'
@@ -207,7 +240,7 @@ export default defineComponent({
                         onClick={this.batchExportWorkflow}
                         class='btn-delete-all'
                       >
-                        {t('project.workflow.export')}
+                        {t('project.workflow.batch_export')}
                       </NButton>
                     )
                   }}

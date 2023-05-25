@@ -17,9 +17,10 @@
 
 package org.apache.dolphinscheduler.common.model;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.dolphinscheduler.common.lifecycle.ServerLifeCycleManager;
 import org.apache.dolphinscheduler.common.thread.BaseDaemonThread;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class BaseHeartBeatTask<T> extends BaseDaemonThread {
@@ -38,9 +39,9 @@ public abstract class BaseHeartBeatTask<T> extends BaseDaemonThread {
 
     @Override
     public synchronized void start() {
-        log.info("Starting {}", threadName);
+        log.info("Starting {}...", threadName);
         super.start();
-        log.info("Started {}, heartBeatInterval: {}", threadName, heartBeatInterval);
+        log.info("Started {}, heartBeatInterval: {}...", threadName, heartBeatInterval);
     }
 
     @Override
@@ -48,7 +49,8 @@ public abstract class BaseHeartBeatTask<T> extends BaseDaemonThread {
         while (runningFlag) {
             try {
                 if (!ServerLifeCycleManager.isRunning()) {
-                    log.info("The current server status is {}, will not write heartBeatInfo into registry", ServerLifeCycleManager.getServerStatus());
+                    log.info("The current server status is {}, will not write heartBeatInfo into registry",
+                            ServerLifeCycleManager.getServerStatus());
                     continue;
                 }
                 T heartBeat = getHeartBeat();
@@ -66,8 +68,8 @@ public abstract class BaseHeartBeatTask<T> extends BaseDaemonThread {
     }
 
     public void shutdown() {
-        log.warn("{} task finished", threadName);
         runningFlag = false;
+        log.warn("{} finished...", threadName);
     }
 
     private void handleInterruptException(InterruptedException ex) {

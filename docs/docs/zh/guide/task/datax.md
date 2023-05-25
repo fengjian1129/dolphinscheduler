@@ -4,6 +4,8 @@
 
 DataX 任务类型，用于执行 DataX 程序。对于 DataX 节点，worker 会通过执行 `${DATAX_HOME}/bin/datax.py` 来解析传入的 json 文件。
 
+默认会使用python2.7去执行datax.py，如果需要使用其他版本的python去执行datax.py，需要在环境变量中配置`DATAX_PYTHON`。
+
 ## 创建任务
 
 - 点击项目管理 -> 项目名称 -> 工作流定义，点击“创建工作流”按钮，进入 DAG 编辑页面；
@@ -11,7 +13,10 @@ DataX 任务类型，用于执行 DataX 程序。对于 DataX 节点，worker �
 
 ## 任务参数
 
-- 默认参数说明请参考[DolphinScheduler任务参数附录](appendix.md#默认任务参数)。
+[//]: # (TODO: use the commented anchor below once our website template supports this syntax)
+[//]: # (- 默认参数说明请参考[DolphinScheduler任务参数附录]&#40;appendix.md#默认任务参数&#41;`默认任务参数`一栏。)
+
+- 默认参数说明请参考[DolphinScheduler任务参数附录](appendix.md)`默认任务参数`一栏。
 
 | **任务参数** |                                                **描述**                                                 |
 |----------|-------------------------------------------------------------------------------------------------------|

@@ -17,15 +17,16 @@
 
 package org.apache.dolphinscheduler.server.master.task;
 
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.dolphinscheduler.common.lifecycle.ServerLifeCycleManager;
 import org.apache.dolphinscheduler.common.model.BaseHeartBeatTask;
 import org.apache.dolphinscheduler.common.model.MasterHeartBeat;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.common.utils.OSUtils;
+import org.apache.dolphinscheduler.registry.api.RegistryClient;
 import org.apache.dolphinscheduler.server.master.config.MasterConfig;
-import org.apache.dolphinscheduler.service.registry.RegistryClient;
+
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MasterHeartBeatTask extends BaseHeartBeatTask<MasterHeartBeat> {
@@ -52,12 +53,10 @@ public class MasterHeartBeatTask extends BaseHeartBeatTask<MasterHeartBeat> {
         return MasterHeartBeat.builder()
                 .startupTime(ServerLifeCycleManager.getServerStartupTime())
                 .reportTime(System.currentTimeMillis())
-                .cpuUsage(OSUtils.cpuUsage())
-                .loadAverage(OSUtils.loadAverage())
+                .cpuUsage(OSUtils.cpuUsagePercentage())
                 .availablePhysicalMemorySize(OSUtils.availablePhysicalMemorySize())
-                .maxCpuloadAvg(masterConfig.getMaxCpuLoadAvg())
                 .reservedMemory(masterConfig.getReservedMemory())
-                .memoryUsage(OSUtils.memoryUsage())
+                .memoryUsage(OSUtils.memoryUsagePercentage())
                 .diskAvailable(OSUtils.diskAvailable())
                 .processId(processId)
                 .build();
@@ -67,7 +66,7 @@ public class MasterHeartBeatTask extends BaseHeartBeatTask<MasterHeartBeat> {
     public void writeHeartBeat(MasterHeartBeat masterHeartBeat) {
         String masterHeartBeatJson = JSONUtils.toJsonString(masterHeartBeat);
         registryClient.persistEphemeral(heartBeatPath, masterHeartBeatJson);
-        log.info("Success write master heartBeatInfo into registry, masterRegistryPath: {}, heartBeatInfo: {}",
+        log.debug("Success write master heartBeatInfo into registry, masterRegistryPath: {}, heartBeatInfo: {}",
                 heartBeatPath, masterHeartBeatJson);
     }
 }

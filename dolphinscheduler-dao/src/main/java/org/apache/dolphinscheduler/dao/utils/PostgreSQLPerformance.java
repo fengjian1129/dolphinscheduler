@@ -26,12 +26,10 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Date;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PostgreSQLPerformance extends BaseDBPerformance {
-
-    private static final Logger logger = LoggerFactory.getLogger(PostgreSQLPerformance.class);
 
     /**
      * get monitor record
@@ -59,14 +57,16 @@ public class PostgreSQLPerformance extends BaseDBPerformance {
                 }
             }
 
-            try (ResultSet rs3 = pstmt.executeQuery("select count(*) from pg_stat_activity pg where pg.state = 'active';")) {
+            try (
+                    ResultSet rs3 =
+                            pstmt.executeQuery("select count(*) from pg_stat_activity pg where pg.state = 'active';")) {
                 if (rs3.next()) {
                     monitorRecord.setThreadsRunningConnections(rs3.getInt("count"));
                 }
             }
         } catch (Exception e) {
             monitorRecord.setState(Flag.NO);
-            logger.error("SQLException ", e);
+            log.error("SQLException ", e);
         }
         return monitorRecord;
     }

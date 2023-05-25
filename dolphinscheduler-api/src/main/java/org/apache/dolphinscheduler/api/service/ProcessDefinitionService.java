@@ -31,6 +31,7 @@ import org.apache.dolphinscheduler.dao.entity.User;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -51,7 +52,6 @@ public interface ProcessDefinitionService {
      * @param globalParams global params
      * @param locations locations for nodes
      * @param timeout timeout
-     * @param tenantCode tenantCode
      * @param taskRelationJson relation json for nodes
      * @param taskDefinitionJson taskDefinitionJson
      * @param otherParamsJson otherParamsJson handle other params
@@ -64,7 +64,6 @@ public interface ProcessDefinitionService {
                                                 String globalParams,
                                                 String locations,
                                                 int timeout,
-                                                String tenantCode,
                                                 String taskRelationJson,
                                                 String taskDefinitionJson,
                                                 String otherParamsJson,
@@ -146,18 +145,22 @@ public interface ProcessDefinitionService {
      * Get resource workflow
      *
      * @param loginUser login user
-     * @param code process definition code
+     * @param code      process definition code
      * @return Process definition Object
      */
     ProcessDefinition getProcessDefinition(User loginUser,
                                            long code);
 
+    Optional<ProcessDefinition> queryWorkflowDefinition(long workflowDefinitionCode, int workflowDefinitionVersion);
+    ProcessDefinition queryWorkflowDefinitionThrowExceptionIfNotFound(long workflowDefinitionCode,
+                                                                      int workflowDefinitionVersion);
+
     /**
      * query detail of process definition
      *
-     * @param loginUser login user
+     * @param loginUser   login user
      * @param projectCode project code
-     * @param name process definition name
+     * @param name        process definition name
      * @return process definition detail
      */
 
@@ -202,7 +205,6 @@ public interface ProcessDefinitionService {
      * @param globalParams global params
      * @param locations locations for nodes
      * @param timeout timeout
-     * @param tenantCode tenantCode
      * @param taskRelationJson relation json for nodes
      * @param taskDefinitionJson taskDefinitionJson
      * @param otherParamsJson otherParamsJson handle other params
@@ -216,7 +218,6 @@ public interface ProcessDefinitionService {
                                                 String globalParams,
                                                 String locations,
                                                 int timeout,
-                                                String tenantCode,
                                                 String taskRelationJson,
                                                 String taskDefinitionJson,
                                                 String otherParamsJson,
@@ -245,17 +246,10 @@ public interface ProcessDefinitionService {
      * @return delete result code
      */
     Map<String, Object> batchDeleteProcessDefinitionByCodes(User loginUser,
-                                                           long projectCode,
-                                                           String codes);
+                                                            long projectCode,
+                                                            String codes);
 
-    /**
-     * delete process definition by code
-     *
-     * @param loginUser login user
-     * @param code process definition code
-     */
-    void deleteProcessDefinitionByCode(User loginUser,
-                                       long code);
+    void deleteProcessDefinitionByCode(User loginUser, long workflowDefinitionCode);
 
     /**
      * release process definition: online / offline
@@ -429,7 +423,6 @@ public interface ProcessDefinitionService {
      * @param description description
      * @param globalParams globalParams
      * @param timeout timeout
-     * @param tenantCode tenantCode
      * @param scheduleJson scheduleJson
      * @return process definition code
      */
@@ -439,7 +432,6 @@ public interface ProcessDefinitionService {
                                                      String description,
                                                      String globalParams,
                                                      int timeout,
-                                                     String tenantCode,
                                                      String scheduleJson,
                                                      ProcessExecutionTypeEnum executionType);
 
@@ -453,7 +445,6 @@ public interface ProcessDefinitionService {
      * @param description description
      * @param globalParams globalParams
      * @param timeout timeout
-     * @param tenantCode tenantCode
      * @param scheduleJson scheduleJson
      * @param otherParamsJson otherParamsJson handle other params
      * @param executionType executionType
@@ -466,7 +457,6 @@ public interface ProcessDefinitionService {
                                                          String description,
                                                          String globalParams,
                                                          int timeout,
-                                                         String tenantCode,
                                                          String scheduleJson,
                                                          String otherParamsJson,
                                                          ProcessExecutionTypeEnum executionType);
@@ -522,4 +512,13 @@ public interface ProcessDefinitionService {
      * @return Json String
      */
     String doOtherOperateProcess(User loginUser, ProcessDefinition processDefinition);
+
+    /**
+     * view process variables
+     * @param loginUser    login user
+     * @param projectCode project code
+     * @param code process definition code
+     * @return variables data
+     */
+    Map<String, Object> viewVariables(User loginUser, long projectCode, long code);
 }

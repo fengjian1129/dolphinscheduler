@@ -75,9 +75,9 @@ export function useCanvasInit(options: Options) {
       minimap: {
         enabled: true,
         container: minimap.value,
-        scalable: false,
-        width: 200,
-        height: 120
+        scalable: true,
+        width: 250,
+        height: 150
       },
       interacting: {
         edgeLabelMovable: false,

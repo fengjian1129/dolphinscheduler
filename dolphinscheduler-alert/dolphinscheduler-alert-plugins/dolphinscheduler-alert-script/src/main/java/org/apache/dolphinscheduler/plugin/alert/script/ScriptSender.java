@@ -19,15 +19,16 @@ package org.apache.dolphinscheduler.plugin.alert.script;
 
 import org.apache.dolphinscheduler.alert.api.AlertResult;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.File;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public final class ScriptSender {
 
-    private static final Logger logger = LoggerFactory.getLogger(ScriptSender.class);
     private static final String ALERT_TITLE_OPTION = " -t ";
     private static final String ALERT_CONTENT_OPTION = " -c ";
     private static final String ALERT_USER_PARAMS_OPTION = " -p ";
@@ -36,9 +37,15 @@ public final class ScriptSender {
     private final String userParams;
 
     ScriptSender(Map<String, String> config) {
-        scriptPath = config.get(ScriptParamsConstants.NAME_SCRIPT_PATH);
-        scriptType = config.get(ScriptParamsConstants.NAME_SCRIPT_TYPE);
-        userParams = config.get(ScriptParamsConstants.NAME_SCRIPT_USER_PARAMS);
+        scriptPath = StringUtils.isNotBlank(config.get(ScriptParamsConstants.NAME_SCRIPT_PATH))
+                ? config.get(ScriptParamsConstants.NAME_SCRIPT_PATH)
+                : "";
+        scriptType = StringUtils.isNotBlank(config.get(ScriptParamsConstants.NAME_SCRIPT_TYPE))
+                ? config.get(ScriptParamsConstants.NAME_SCRIPT_TYPE)
+                : "";
+        userParams = StringUtils.isNotBlank(config.get(ScriptParamsConstants.NAME_SCRIPT_USER_PARAMS))
+                ? config.get(ScriptParamsConstants.NAME_SCRIPT_USER_PARAMS)
+                : "";
     }
 
     AlertResult sendScriptAlert(String title, String content) {
@@ -46,6 +53,11 @@ public final class ScriptSender {
         if (ScriptType.SHELL.getDescp().equals(scriptType)) {
             return executeShellScript(title, content);
         }
+        // If it is another type of alarm script can be added here, such as python
+
+        alertResult.setStatus("false");
+        log.error("script type error: {}", scriptType);
+        alertResult.setMessage("script type error : " + scriptType);
         return alertResult;
     }
 
@@ -60,30 +72,30 @@ public final class ScriptSender {
         File shellScriptFile = new File(scriptPath);
         // validate existence
         if (!shellScriptFile.exists()) {
-            logger.error("shell script not exist : {}", scriptPath);
+            log.error("shell script not exist : {}", scriptPath);
             alertResult.setMessage("shell script not exist : " + scriptPath);
             return alertResult;
         }
         // validate is file
         if (!shellScriptFile.isFile()) {
-            logger.error("shell script is not a file : {}", scriptPath);
+            log.error("shell script is not a file : {}", scriptPath);
             alertResult.setMessage("shell script is not a file : " + scriptPath);
             return alertResult;
         }
 
         // avoid command injection (RCE vulnerability)
         if (userParams.contains("'")) {
-            logger.error("shell script illegal user params : {}", userParams);
+            log.error("shell script illegal user params : {}", userParams);
             alertResult.setMessage("shell script illegal user params : " + userParams);
             return alertResult;
         }
         if (title.contains("'")) {
-            logger.error("shell script illegal title : {}", title);
+            log.error("shell script illegal title : {}", title);
             alertResult.setMessage("shell script illegal title : " + title);
             return alertResult;
         }
         if (content.contains("'")) {
-            logger.error("shell script illegal content : {}", content);
+            log.error("shell script illegal content : {}", content);
             alertResult.setMessage("shell script illegal content : " + content);
             return alertResult;
         }
@@ -98,7 +110,7 @@ public final class ScriptSender {
             return alertResult;
         }
         alertResult.setMessage("send script alert msg error,exitCode is " + exitCode);
-        logger.info("send script alert msg error,exitCode is {}", exitCode);
+        log.info("send script alert msg error,exitCode is {}", exitCode);
         return alertResult;
     }
 

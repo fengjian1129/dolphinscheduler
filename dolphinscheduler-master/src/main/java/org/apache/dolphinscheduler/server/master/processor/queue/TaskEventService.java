@@ -17,32 +17,30 @@
 
 package org.apache.dolphinscheduler.server.master.processor.queue;
 
-import org.apache.dolphinscheduler.common.Constants;
+import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.lifecycle.ServerLifeCycleManager;
 import org.apache.dolphinscheduler.common.thread.BaseDaemonThread;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 /**
  * task manager
  */
 @Component
+@Slf4j
 public class TaskEventService {
-
-    /**
-     * logger
-     */
-    private final Logger logger = LoggerFactory.getLogger(TaskEventService.class);
 
     /**
      * attemptQueue
@@ -62,14 +60,14 @@ public class TaskEventService {
     @PostConstruct
     public void start() {
         this.taskEventThread = new TaskEventDispatchThread();
-        logger.info("TaskEvent dispatch thread starting");
+        log.info("TaskEvent dispatch thread starting");
         this.taskEventThread.start();
-        logger.info("TaskEvent dispatch thread started");
+        log.info("TaskEvent dispatch thread started");
 
         this.taskEventHandlerThread = new TaskEventHandlerThread();
-        logger.info("TaskEvent handle thread staring");
+        log.info("TaskEvent handle thread staring");
         this.taskEventHandlerThread.start();
-        logger.info("TaskEvent handle thread started");
+        log.info("TaskEvent handle thread started");
     }
 
     @PreDestroy
@@ -86,7 +84,7 @@ public class TaskEventService {
                 taskExecuteThreadPool.eventHandler();
             }
         } catch (Exception e) {
-            logger.error("TaskEventService stop error:", e);
+            log.error("TaskEventService stop error:", e);
         }
     }
 
@@ -119,10 +117,10 @@ public class TaskEventService {
                     Thread.currentThread().interrupt();
                     break;
                 } catch (Exception e) {
-                    logger.error("persist task error", e);
+                    log.error("persist task error", e);
                 }
             }
-            logger.info("StateEventResponseWorker stopped");
+            log.info("StateEventResponseWorker stopped");
         }
     }
 
@@ -137,17 +135,17 @@ public class TaskEventService {
 
         @Override
         public void run() {
-            logger.info("event handler thread started");
+            log.info("event handler thread started");
             while (!ServerLifeCycleManager.isStopped()) {
                 try {
                     taskExecuteThreadPool.eventHandler();
                     TimeUnit.MILLISECONDS.sleep(Constants.SLEEP_TIME_MILLIS);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    logger.warn("TaskEvent handle thread interrupted, will return this loop");
+                    log.warn("TaskEvent handle thread interrupted, will return this loop");
                     break;
                 } catch (Exception e) {
-                    logger.error("event handler thread error", e);
+                    log.error("event handler thread error", e);
                 }
             }
         }

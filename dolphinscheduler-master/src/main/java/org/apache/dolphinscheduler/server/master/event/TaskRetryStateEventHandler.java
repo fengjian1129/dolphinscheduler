@@ -17,7 +17,6 @@
 
 package org.apache.dolphinscheduler.server.master.event;
 
-import com.google.auto.service.AutoService;
 import org.apache.dolphinscheduler.common.enums.StateEventType;
 import org.apache.dolphinscheduler.dao.entity.TaskInstance;
 import org.apache.dolphinscheduler.server.master.metrics.TaskMetrics;
@@ -25,13 +24,20 @@ import org.apache.dolphinscheduler.server.master.runner.WorkflowExecuteRunnable;
 
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
+import com.google.auto.service.AutoService;
+
 @AutoService(StateEventHandler.class)
+@Slf4j
 public class TaskRetryStateEventHandler implements StateEventHandler {
 
     @Override
     public boolean handleStateEvent(WorkflowExecuteRunnable workflowExecuteRunnable,
                                     StateEvent stateEvent) throws StateEventHandleException {
         TaskStateEvent taskStateEvent = (TaskStateEvent) stateEvent;
+
+        log.info("Handle task instance retry event, taskCode: {}", taskStateEvent.getTaskCode());
 
         TaskMetrics.incTaskInstanceByState("retry");
         Map<Long, TaskInstance> waitToRetryTaskInstanceMap = workflowExecuteRunnable.getWaitToRetryTaskInstanceMap();

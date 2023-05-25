@@ -27,6 +27,7 @@ export default {
   workflow: 'Workflow',
   workflow_definition: 'Workflow Definition',
   workflow_instance: 'Workflow Instance',
+  workflow_timing: 'Workflow Timing',
   task: 'Task',
   task_instance: 'Task Instance',
   task_definition: 'Task Definition',
@@ -56,5 +57,6 @@ export default {
   task_group_queue: 'Task Group Queue',
   data_quality: 'Data Quality',
   task_result: 'Task Result',
-  rule: 'Rule management'
+  rule: 'Rule management',
+  ui_setting: 'UI Setting'
 }

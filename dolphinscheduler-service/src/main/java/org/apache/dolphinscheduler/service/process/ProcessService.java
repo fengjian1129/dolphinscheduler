@@ -20,7 +20,6 @@ package org.apache.dolphinscheduler.service.process;
 import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.enums.TaskGroupQueueStatus;
 import org.apache.dolphinscheduler.common.graph.DAG;
-import org.apache.dolphinscheduler.common.model.TaskNode;
 import org.apache.dolphinscheduler.common.model.TaskNodeRelation;
 import org.apache.dolphinscheduler.common.utils.CodeGenerateUtils;
 import org.apache.dolphinscheduler.dao.entity.Command;
@@ -36,7 +35,6 @@ import org.apache.dolphinscheduler.dao.entity.Environment;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinitionLog;
 import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
-import org.apache.dolphinscheduler.dao.entity.ProcessInstanceMap;
 import org.apache.dolphinscheduler.dao.entity.ProcessTaskRelation;
 import org.apache.dolphinscheduler.dao.entity.ProcessTaskRelationLog;
 import org.apache.dolphinscheduler.dao.entity.Project;
@@ -47,15 +45,13 @@ import org.apache.dolphinscheduler.dao.entity.TaskDefinition;
 import org.apache.dolphinscheduler.dao.entity.TaskDefinitionLog;
 import org.apache.dolphinscheduler.dao.entity.TaskGroupQueue;
 import org.apache.dolphinscheduler.dao.entity.TaskInstance;
-import org.apache.dolphinscheduler.dao.entity.Tenant;
 import org.apache.dolphinscheduler.dao.entity.UdfFunc;
 import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.plugin.task.api.enums.TaskExecutionStatus;
-import org.apache.dolphinscheduler.plugin.task.api.model.DateInterval;
 import org.apache.dolphinscheduler.service.exceptions.CronParseException;
+import org.apache.dolphinscheduler.service.model.TaskNode;
 import org.apache.dolphinscheduler.spi.enums.ResourceType;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,19 +64,7 @@ public interface ProcessService {
     ProcessInstance handleCommand(String host,
                                   Command command) throws CronParseException, CodeGenerateUtils.CodeGenerateException;
 
-    void moveToErrorCommand(Command command, String message);
-
-    int createCommand(Command command);
-
-    List<Command> findCommandPage(int pageSize, int pageNumber);
-
-    List<Command> findCommandPageBySlot(int pageSize, int pageNumber, int masterCount, int thisMasterSlot);
-
-    boolean verifyIsNeedCreateCommand(Command command);
-
     Optional<ProcessInstance> findProcessInstanceDetailById(int processId);
-
-    List<TaskDefinition> getTaskNodeListByDefinition(long defineCode);
 
     ProcessInstance findProcessInstanceById(int processId);
 
@@ -96,64 +80,27 @@ public interface ProcessService {
 
     void removeTaskLogFile(Integer processInstanceId);
 
-    void deleteWorkTaskInstanceByProcessInstanceId(int processInstanceId);
-
     void recurseFindSubProcess(long parentCode, List<Long> ids);
 
-    void createRecoveryWaitingThreadCommand(Command originCommand, ProcessInstance processInstance);
-
-    Tenant getTenantForProcess(int tenantId, int userId);
+    String getTenantForProcess(String tenantCode, int userId);
 
     Environment findEnvironmentByCode(Long environmentCode);
 
     void setSubProcessParam(ProcessInstance subProcessInstance);
 
-    TaskInstance submitTaskWithRetry(ProcessInstance processInstance, TaskInstance taskInstance, int commitRetryTimes,
-                                     long commitInterval);
+    boolean submitTaskWithRetry(ProcessInstance processInstance, TaskInstance taskInstance, int commitRetryTimes,
+                                long commitInterval);
 
     @Transactional
-    TaskInstance submitTask(ProcessInstance processInstance, TaskInstance taskInstance);
+    boolean submitTask(ProcessInstance processInstance, TaskInstance taskInstance);
 
     void createSubWorkProcess(ProcessInstance parentProcessInstance, TaskInstance task);
-
-    Map<String, String> getGlobalParamMap(String globalParams);
-
-    Command createSubProcessCommand(ProcessInstance parentProcessInstance,
-                                    ProcessInstance childInstance,
-                                    ProcessInstanceMap instanceMap,
-                                    TaskInstance task);
-
-    TaskInstance submitTaskInstanceToDB(TaskInstance taskInstance, ProcessInstance processInstance);
-
-    TaskExecutionStatus getSubmitTaskState(TaskInstance taskInstance, ProcessInstance processInstance);
-
-    int saveCommand(Command command);
-
-    boolean saveTaskInstance(TaskInstance taskInstance);
-
-    boolean createTaskInstance(TaskInstance taskInstance);
-
-    boolean updateTaskInstance(TaskInstance taskInstance);
-
-    TaskInstance findTaskInstanceById(Integer taskId);
-
-    List<TaskInstance> findTaskInstanceByIdList(List<Integer> idList);
 
     void packageTaskInstance(TaskInstance taskInstance, ProcessInstance processInstance);
 
     void updateTaskDefinitionResources(TaskDefinition taskDefinition);
 
     List<Integer> findTaskIdByInstanceState(int instanceId, TaskExecutionStatus state);
-
-    List<TaskInstance> findValidTaskListByProcessId(Integer processInstanceId, int testFlag);
-
-    List<TaskInstance> findPreviousTaskListByWorkProcessId(Integer processInstanceId);
-
-    int updateWorkProcessInstanceMap(ProcessInstanceMap processInstanceMap);
-
-    int createWorkProcessInstanceMap(ProcessInstanceMap processInstanceMap);
-
-    ProcessInstanceMap findWorkProcessMapByParent(Integer parentWorkProcessId, Integer parentTaskId);
 
     int deleteWorkProcessMapByParentId(int parentWorkProcessId);
 
@@ -167,8 +114,6 @@ public interface ProcessService {
 
     List<Schedule> queryReleaseSchedulerListByProcessDefinitionCode(long processDefinitionCode);
 
-    Map<Long, String> queryWorkerGroupByProcessDefinitionCodes(List<Long> processDefinitionCodeList);
-
     List<DependentProcessDefinition> queryDependentProcessDefinitionByProcessDefinitionCode(long processDefinitionCode);
 
     List<ProcessInstance> queryNeedFailoverProcessInstances(String host);
@@ -177,8 +122,6 @@ public interface ProcessService {
 
     @Transactional
     void processNeedFailoverProcessInstances(ProcessInstance processInstance);
-
-    List<TaskInstance> queryNeedFailoverTaskInstances(String host);
 
     DataSource findDataSourceById(int id);
 
@@ -190,17 +133,9 @@ public interface ProcessService {
 
     List<Schedule> selectAllByProcessDefineCode(long[] codes);
 
-    ProcessInstance findLastSchedulerProcessInterval(Long definitionCode, DateInterval dateInterval, int testFlag);
-
-    ProcessInstance findLastManualProcessInterval(Long definitionCode, DateInterval dateInterval, int testFlag);
-
-    ProcessInstance findLastRunningProcess(Long definitionCode, Date startTime, Date endTime, int testFlag);
-
     String queryUserQueueByProcessInstance(ProcessInstance processInstance);
 
     ProjectUser queryProjectWithUserByProcessInstanceId(int processInstanceId);
-
-    String getTaskWorkerGroup(TaskInstance taskInstance);
 
     List<Project> getProjectListHavePerm(int userId);
 
@@ -236,12 +171,6 @@ public interface ProcessService {
     DAG<String, TaskNode, TaskNodeRelation> genDagGraph(ProcessDefinition processDefinition);
 
     DagData genDagData(ProcessDefinition processDefinition);
-
-    List<TaskDefinitionLog> genTaskDefineList(List<ProcessTaskRelation> processTaskRelations);
-
-    List<TaskDefinitionLog> getTaskDefineLogListByRelation(List<ProcessTaskRelation> processTaskRelations);
-
-    TaskDefinition findTaskDefinition(long taskCode, int taskDefinitionVersion);
 
     List<ProcessTaskRelation> findRelationByCode(long processDefinitionCode, int processDefinitionVersion);
 
@@ -281,17 +210,17 @@ public interface ProcessService {
     void changeTaskGroupQueueStatus(int taskId, TaskGroupQueueStatus status);
 
     TaskGroupQueue insertIntoTaskGroupQueue(Integer taskId,
-                                            String taskName, Integer groupId,
-                                            Integer processId, Integer priority, TaskGroupQueueStatus status);
+                                            String taskName,
+                                            Integer groupId,
+                                            Integer processId,
+                                            Integer priority,
+                                            TaskGroupQueueStatus status);
 
     int updateTaskGroupQueueStatus(Integer taskId, int status);
 
     int updateTaskGroupQueue(TaskGroupQueue taskGroupQueue);
 
     TaskGroupQueue loadTaskGroupQueue(int taskId);
-
-    void sendStartTask2Master(ProcessInstance processInstance, int taskId,
-                              org.apache.dolphinscheduler.remote.command.CommandType taskType);
 
     ProcessInstance loadNextProcess4Serial(long code, int state, int id);
 
@@ -300,4 +229,6 @@ public interface ProcessService {
     void forceProcessInstanceSuccessByTaskInstanceId(Integer taskInstanceId);
 
     Integer queryTestDataSourceId(Integer onlineDataSourceId);
+
+    void saveCommandTrigger(Integer commandId, Integer processInstanceId);
 }

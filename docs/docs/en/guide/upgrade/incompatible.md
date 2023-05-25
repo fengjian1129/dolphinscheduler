@@ -4,9 +4,13 @@ This document records the incompatible updates between each version. You need to
 
 ## dev
 
+* Change regex matching sql params in SQL task plugin ([#13378](https://github.com/apache/dolphinscheduler/pull/13378))
 * Remove the spark version of spark task ([#11860](https://github.com/apache/dolphinscheduler/pull/11860)).
+* Change the default unix shell executor from sh to bash ([#12180](https://github.com/apache/dolphinscheduler/pull/12180)).
+* Remove `deleteSource` in `download()` of `StorageOperate` ([#14084](https://github.com/apache/dolphinscheduler/pull/14084))
 
 ## 3.0.0
 
 * Copy and import workflow without 'copy' suffix [#10607](https://github.com/apache/dolphinscheduler/pull/10607)
 * Use semicolon as default sql segment separator [#10869](https://github.com/apache/dolphinscheduler/pull/10869)
+

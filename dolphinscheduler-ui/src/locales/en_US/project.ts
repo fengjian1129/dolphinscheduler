@@ -36,7 +36,11 @@ export default {
     delete: 'Delete',
     confirm: 'Confirm',
     cancel: 'Cancel',
-    delete_confirm: 'Delete?'
+    delete_confirm: 'Delete?',
+    authorize_level: 'Authorize Level',
+    no_permission: 'No Permission',
+    read_permission: 'Read Permission',
+    all_permission: 'All Permission'
   },
   workflow: {
     on_line: 'Online',
@@ -44,6 +48,7 @@ export default {
     operating_environment: 'Operating Environment',
     workflow_relation: 'Workflow Relation',
     create_workflow: 'Create Workflow',
+    create_workflow_dynamic: 'Create Workflow (Dynamic)',
     import_workflow: 'Import Workflow',
     workflow_name: 'Workflow Name',
     workflow_instance_name: 'Workflow Instance Name',
@@ -60,6 +65,7 @@ export default {
     workflow_publish_status: 'Workflow Publish Status',
     schedule_publish_status: 'Schedule Publish Status',
     workflow_definition: 'Workflow Definition',
+    workflow_timing: 'Workflow Timing',
     workflow_instance: 'Workflow Instance',
     status: 'Status',
     create_time: 'Create Time',
@@ -75,12 +81,16 @@ export default {
     up_line: 'Online',
     down_line: 'Offline',
     copy_workflow: 'Copy Workflow',
-    cron_manage: 'Cron manage',
+    copy_workflow_name: 'Copy workflow name',
+    visit_workflow_instances: 'Visit workflow instances',
+    cron_manage: 'Timing Management',
     delete: 'Delete',
     tree_view: 'Tree View',
     tree_limit: 'Limit Size',
     export: 'Export',
     batch_copy: 'Batch Copy',
+    batch_delete: 'Batch Delete',
+    batch_export: 'Batch Export',
     version_info: 'Version Info',
     version: 'Version',
     file_upload: 'File Upload',
@@ -98,9 +108,13 @@ export default {
     backward_execution: 'Backward execution',
     forward_execution: 'Forward execution',
     current_node_execution: 'Execute only the current node',
+    backward_execution_task: 'Run backwards',
+    forward_execution_task: 'Run forwards',
+    current_node_execution_task: 'Run',
     notification_strategy: 'Notification Strategy',
     workflow_priority: 'Workflow Priority',
     worker_group: 'Worker Group',
+    tenant_code: 'Tenant',
     environment_name: 'Environment Name',
     alarm_group: 'Alarm Group',
     complement_data: 'Complement Data',
@@ -135,6 +149,7 @@ export default {
     switch_version: 'Switch To This Version',
     confirm_switch_version: 'Confirm Switch To This Version?',
     current_version: 'Current Version',
+    run_type: 'Run Type',
     scheduling_time: 'Scheduling Time',
     duration: 'Duration',
     run_times: 'Run Times',
@@ -153,6 +168,7 @@ export default {
     pause: 'Pause',
     recovery_waiting_thread: 'Recovery waiting thread',
     recover_serial_wait: 'Recover serial wait',
+    execute_task: 'Execute the specified task',
     recovery_suspend: 'Recovery Suspend',
     recovery_failed: 'Recovery Failed',
     gantt: 'Gantt',
@@ -195,6 +211,7 @@ export default {
     cancel_full_screen: 'Cancel full screen',
     task_state: 'Task status',
     mode_of_dependent: 'Mode of dependent',
+    all_level_dependent: 'all level dependent',
     open: 'Open',
     project_name_required: 'Project name is required',
     related_items: 'Related items',
@@ -203,7 +220,9 @@ export default {
     workflow_relation_no_data_result_title:
       'Can not find any relations of workflows.',
     workflow_relation_no_data_result_desc:
-      'There is not any workflows. Please create a workflow, and then visit this page again.'
+      'There is not any workflows. Please create a workflow, and then visit this page again.',
+    ready_to_block: 'Ready to block',
+    block: 'Block'
   },
   task: {
     on_line: 'Online',
@@ -264,11 +283,13 @@ export default {
     set_parameters_before_starting: 'Please set the parameters before starting',
     notification_strategy: 'Notification Strategy',
     worker_group: 'Worker group',
+    tenant_code: 'Tenant',
     environment_name: 'Environment Name',
     alarm_group: 'Alarm group',
     startup_parameter: 'Startup Parameter',
     whether_dry_run: 'Whether Dry-Run',
-    please_choose: 'Please Choose'
+    please_choose: 'Please Choose',
+    remove_task_cache: 'Clear cache'
   },
   dag: {
     create: 'Create Workflow',
@@ -288,7 +309,6 @@ export default {
     copy_success: 'Copy Success',
     workflow_name: 'Workflow Name',
     description: 'Description',
-    tenant: 'Tenant',
     timeout_alert: 'Timeout Alert',
     process_execute_type: 'Process execute type',
     parallel: 'parallel',
@@ -316,6 +336,7 @@ export default {
     online: 'Online'
   },
   node: {
+    is_cache: 'Cache Execution',
     jvm_args: 'Java VM Parameters',
     jvm_args_tips: 'Please enter virtual machine parameters',
     run_type: 'Run Type',
@@ -354,6 +375,7 @@ export default {
     times: 'Times',
     failed_retry_interval: 'Failed retry interval',
     minute: 'Minute',
+    second: 'Second',
     delay_execution_time: 'Delay execution time',
     namespace_cluster: 'Namespace(Cluster)',
     min_cpu: 'Min cpu',
@@ -362,6 +384,12 @@ export default {
     mb: 'MB',
     image: 'Image',
     image_tips: 'Please enter image',
+    command: 'Command',
+    command_tips:
+      'Please enter the container execution command, for example: ["printenv"]',
+    args: 'Args',
+    args_tips:
+      'Please enter the container execution command args, for example: ["HOSTNAME", "KUBERNETES_PORT"]',
     min_memory_tips: 'Please enter min memory',
     state: 'State',
     branch_flow: 'Branch flow',
@@ -398,6 +426,10 @@ export default {
     prop_repeat: 'prop is repeat',
     value_tips: 'value(optional)',
     value_required_tips: 'value(required)',
+    custom_labels: 'Customized labels',
+    label_repeat: 'repeated label',
+    label_name_tips: 'label name(required)',
+    label_value_tips: 'label value(required)',
     pre_tasks: 'Pre tasks',
     program_type: 'Program Type',
     main_class: 'Main Class',
@@ -594,6 +626,7 @@ export default {
     add_dependency: 'Add dependency',
     waiting_dependent_start: 'Waiting Dependent start',
     check_interval: 'Check interval',
+    check_interval_tips: 'Check interval must be a positive integer',
     waiting_dependent_complete: 'Waiting Dependent complete',
     project_name: 'Project Name',
     project_name_tips: 'Please select a project(required)',
@@ -663,6 +696,10 @@ export default {
       'Directory for cloned zeppelin note in production mode',
     zeppelin_production_note_directory_tips:
       'Please enter the production note directory to enable production mode',
+    zeppelin_username: 'zeppelinUsername',
+    zeppelin_username_tips: 'Please enter the zeppelin server username',
+    zeppelin_password: 'zeppelinPassword',
+    zeppelin_password_tips: 'Please enter the zeppelin server password',
     hive_cli_task_execution_type: 'Hive Cli Task Execution Type',
     hive_sql_script: 'Hive SQL Script',
     hive_cli_options: 'Hive Cli Options',
@@ -718,7 +755,7 @@ export default {
     mlflow_deployModelKey: 'Model-URI',
     mlflow_deployPort: 'Port',
     mlflowProjectRepository: 'Repository',
-    mlflowProjectRepository_tips: 'git respository or path on worker',
+    mlflowProjectRepository_tips: 'git repository or path on worker',
     mlflowProjectVersion: 'Project Version',
     mlflowProjectVersion_tips: 'git version',
     mlflow_cpuLimit: 'Max Cpu Limit',
@@ -765,6 +802,8 @@ export default {
     custom_config: 'Custom Config',
     engine: 'engine',
     engine_tips: 'Please select engine',
+    startup_script: 'Startup script',
+    startup_script_tips: 'Please select startup script',
     run_mode: 'Run Mode',
     dinky_address: 'Dinky address',
     dinky_address_tips: 'Please enter the url of your dinky',
@@ -782,7 +821,19 @@ export default {
     pytorch_requirements: 'Requirement File',
     pytorch_conda_python_version: 'Python Version',
     pytorch_conda_python_version_tips:
-      'Please enter the version number, such as 3.6, 3.7, 3.x'
+      'Please enter the version number, such as 3.6, 3.7, 3.x',
+    factory_name: 'Factory Name',
+    resource_group_name: 'Resource Group Name',
+    pipeline_name: 'Pipeline Name',
+    factory_tips: 'Please select factory',
+    resource_group_tips: 'Please select resource group',
+    pipeline_tips: 'Please select pipeline',
+    dependent_failure_policy: 'Dependent failure policy',
+    dependent_failure_policy_failure: 'failure',
+    dependent_failure_policy_waiting: 'waiting',
+    dependent_failure_waiting_time: 'Dependent failure waiting time',
+    dependent_failure_waiting_time_tips:
+      'Failure waiting time must be a positive integer'
   },
   menu: {
     fav: 'Favorites',
@@ -792,6 +843,6 @@ export default {
     di: 'Data Integration',
     dq: 'Data Quality',
     ml: 'Machine Learning',
-    other: 'Other',
+    other: 'Other'
   }
 }

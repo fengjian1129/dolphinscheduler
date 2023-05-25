@@ -17,6 +17,9 @@
 
 package org.apache.dolphinscheduler.plugin.task.jupyter;
 
+import org.apache.dolphinscheduler.common.utils.DateUtils;
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
+import org.apache.dolphinscheduler.common.utils.PropertyUtils;
 import org.apache.dolphinscheduler.plugin.task.api.AbstractRemoteTask;
 import org.apache.dolphinscheduler.plugin.task.api.ShellCommandExecutor;
 import org.apache.dolphinscheduler.plugin.task.api.TaskCallBack;
@@ -28,10 +31,8 @@ import org.apache.dolphinscheduler.plugin.task.api.model.TaskResponse;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.parser.ParamUtils;
 import org.apache.dolphinscheduler.plugin.task.api.parser.ParameterUtils;
-import org.apache.dolphinscheduler.spi.utils.DateUtils;
-import org.apache.dolphinscheduler.spi.utils.JSONUtils;
-import org.apache.dolphinscheduler.spi.utils.PropertyUtils;
-import org.apache.dolphinscheduler.spi.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public class JupyterTask extends AbstractRemoteTask {
         this.taskExecutionContext = taskExecutionContext;
         this.shellCommandExecutor = new ShellCommandExecutor(this::logHandle,
                 taskExecutionContext,
-                logger);
+                log);
     }
 
     @Override
@@ -64,12 +65,12 @@ public class JupyterTask extends AbstractRemoteTask {
 
     @Override
     public void init() {
-        logger.info("jupyter task params {}", taskExecutionContext.getTaskParams());
 
         jupyterParameters = JSONUtils.parseObject(taskExecutionContext.getTaskParams(), JupyterParameters.class);
+        log.info("Initialize jupyter task params {}", JSONUtils.toPrettyJsonString(jupyterParameters));
 
         if (null == jupyterParameters) {
-            logger.error("jupyter params is null");
+            log.error("jupyter params is null");
             return;
         }
 
@@ -82,17 +83,17 @@ public class JupyterTask extends AbstractRemoteTask {
     @Override
     public void handle(TaskCallBack taskCallBack) throws TaskException {
         try {
-            TaskResponse response = shellCommandExecutor.run(buildCommand());
+            TaskResponse response = shellCommandExecutor.run(buildCommand(), taskCallBack);
             setExitStatusCode(response.getExitStatusCode());
             setAppIds(String.join(TaskConstants.COMMA, getApplicationIds()));
             setProcessId(response.getProcessId());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.error("The current Jupyter task has been interrupted", e);
+            log.error("The current Jupyter task has been interrupted", e);
             setExitStatusCode(TaskConstants.EXIT_CODE_FAILURE);
             throw new TaskException("The current Jupyter task has been interrupted", e);
         } catch (Exception e) {
-            logger.error("jupyter task execution failure", e);
+            log.error("jupyter task execution failure", e);
             exitStatusCode = -1;
             throw new TaskException("Execute jupyter task failed", e);
         }
@@ -152,7 +153,7 @@ public class JupyterTask extends AbstractRemoteTask {
         String command = ParameterUtils
                 .convertParameterPlaceholders(String.join(" ", args), ParamUtils.convert(paramsMap));
 
-        logger.info("jupyter task command: {}", command);
+        log.info("jupyter task command: {}", command);
 
         return command;
     }
@@ -176,7 +177,7 @@ public class JupyterTask extends AbstractRemoteTask {
                 }
 
             } catch (IOException e) {
-                logger.error("fail to parse jupyter parameterization", e);
+                log.error("fail to parse jupyter parameterization", e);
                 throw e;
             }
         }

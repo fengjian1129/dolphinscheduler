@@ -47,6 +47,11 @@ import { useChunjun } from './use-chunjun'
 import { usePytorch } from './use-pytorch'
 import { useHiveCli } from './use-hive-cli'
 import { useDms } from './use-dms'
+import { useDatasync } from './use-datasync'
+import { useKubeflow } from './use-kubeflow'
+import { useLinkis } from './use-linkis'
+import { useDataFactory } from './use-data-factory'
+import { useRemoteShell } from './use-remote-shell'
 
 export default {
   SHELL: useShell,
@@ -80,5 +85,10 @@ export default {
   JAVA: useJava,
   PYTORCH: usePytorch,
   HIVECLI: useHiveCli,
-  DMS: useDms
+  DMS: useDms,
+  DATASYNC: useDatasync,
+  KUBEFLOW: useKubeflow,
+  LINKIS: useLinkis,
+  DATA_FACTORY: useDataFactory,
+  REMOTESHELL: useRemoteShell
 }

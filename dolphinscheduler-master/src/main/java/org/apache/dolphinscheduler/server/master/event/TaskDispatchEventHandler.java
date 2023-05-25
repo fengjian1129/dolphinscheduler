@@ -19,28 +19,27 @@ package org.apache.dolphinscheduler.server.master.event;
 
 import org.apache.dolphinscheduler.common.enums.TaskEventType;
 import org.apache.dolphinscheduler.dao.entity.TaskInstance;
+import org.apache.dolphinscheduler.dao.repository.TaskInstanceDao;
 import org.apache.dolphinscheduler.dao.utils.TaskInstanceUtils;
 import org.apache.dolphinscheduler.plugin.task.api.enums.TaskExecutionStatus;
 import org.apache.dolphinscheduler.server.master.cache.ProcessInstanceExecCacheManager;
 import org.apache.dolphinscheduler.server.master.processor.queue.TaskEvent;
 import org.apache.dolphinscheduler.server.master.runner.WorkflowExecuteRunnable;
-import org.apache.dolphinscheduler.service.process.ProcessService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class TaskDispatchEventHandler implements TaskEventHandler {
-
-    private final Logger logger = LoggerFactory.getLogger(TaskDispatchEventHandler.class);
 
     @Autowired
     private ProcessInstanceExecCacheManager processInstanceExecCacheManager;
 
     @Autowired
-    private ProcessService processService;
+    private TaskInstanceDao taskInstanceDao;
 
     @Override
     public void handleTaskEvent(TaskEvent taskEvent) throws TaskEventHandleError {
@@ -55,7 +54,7 @@ public class TaskDispatchEventHandler implements TaskEventHandler {
         TaskInstance taskInstance = workflowExecuteRunnable.getTaskInstance(taskInstanceId)
                 .orElseThrow(() -> new TaskEventHandleError("Cannot find related taskInstance from cache"));
         if (taskInstance.getState() != TaskExecutionStatus.SUBMITTED_SUCCESS) {
-            logger.warn(
+            log.warn(
                     "The current taskInstance status is not SUBMITTED_SUCCESS, so the dispatch event will be discarded, the current is a delay event, event: {}",
                     taskEvent);
             return;
@@ -68,7 +67,7 @@ public class TaskDispatchEventHandler implements TaskEventHandler {
         taskInstance.setState(TaskExecutionStatus.DISPATCH);
         taskInstance.setHost(taskEvent.getWorkerAddress());
         try {
-            if (!processService.updateTaskInstance(taskInstance)) {
+            if (!taskInstanceDao.updateTaskInstance(taskInstance)) {
                 throw new TaskEventHandleError("Handle task dispatch event error, update taskInstance to db failed");
             }
         } catch (Exception ex) {

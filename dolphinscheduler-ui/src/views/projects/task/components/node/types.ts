@@ -33,15 +33,20 @@ export type {
 export type { IResource, ProgramType, IMainJar } from '@/store/project/types'
 export type { ITaskState } from '@/common/types'
 
+export type RelationType = 'AND' | 'OR'
+
 type SourceType = 'MYSQL' | 'HDFS' | 'HIVE'
 type ModelType = 'import' | 'export'
-type RelationType = 'AND' | 'OR'
 type ITaskType = TaskType
 type IDateType = 'hour' | 'day' | 'week' | 'month'
 
 interface IOption {
   label: string
   value: string | number
+}
+
+interface IRenderOption extends IOption {
+  filterLabel: string
 }
 
 interface ITaskPriorityOption extends SelectOption {
@@ -61,17 +66,29 @@ interface ILocalParam {
   value?: string
 }
 
+interface ICustomLabel {
+  label: string
+  value: string
+}
+
 interface IResponseJsonItem extends Omit<IJsonItemParams, 'type'> {
   type: 'input' | 'select' | 'radio' | 'group'
   emit: 'change'[]
 }
 
-interface IDependpendItem {
-  depTaskCode?: number
-  status?: 'SUCCESS' | 'FAILURE'
+interface IDependentItemOptions {
   definitionCodeOptions?: IOption[]
   depTaskCodeOptions?: IOption[]
   dateOptions?: IOption[]
+}
+
+interface IDependTaskOptions {
+  dependItemList: IDependentItemOptions[]
+}
+
+interface IDependentItem {
+  depTaskCode?: number
+  status?: 'SUCCESS' | 'FAILURE'
   projectCode?: number
   definitionCode?: number
   cycle?: 'month' | 'week' | 'day' | 'hour'
@@ -82,7 +99,7 @@ interface IDependTask {
   condition?: string
   nextNode?: number
   relation?: RelationType
-  dependItemList?: IDependpendItem[]
+  dependItemList?: IDependentItem[]
 }
 
 interface ISwitchResult {
@@ -90,8 +107,22 @@ interface ISwitchResult {
   nextNode?: number
 }
 
+interface IDependentParameters {
+  checkInterval?: number
+  failurePolicy?: 'DEPENDENT_FAILURE_FAILURE' | 'DEPENDENT_FAILURE_WAITING'
+  failureWaitingTime?: number
+  relation?: RelationType
+  dependTaskList?: IDependTask[]
+}
+
+/*
+ * resourceName: resource full name
+ * res: resource file name
+ */
 interface ISourceItem {
-  id: number
+  id?: number
+  resourceName: string
+  res?: string
 }
 
 interface ISqoopTargetData {
@@ -278,10 +309,7 @@ interface ITaskParams {
   switchResult?: ISwitchResult
   dependTaskList?: IDependTask[]
   nextNode?: number
-  dependence?: {
-    relation?: RelationType
-    dependTaskList?: IDependTask[]
-  }
+  dependence?: IDependentParameters
   customConfig?: number
   json?: string
   dsType?: string
@@ -302,6 +330,10 @@ interface ITaskParams {
   zeppelinParagraphId?: string
   zeppelinRestEndpoint?: string
   restEndpoint?: string
+  zeppelinUsername?: string
+  username?: string
+  zeppelinPassword?: string
+  password?: string
   zeppelinProductionNoteDirectory?: string
   productionNoteDirectory?: string
   hiveCliOptions?: string
@@ -315,6 +347,7 @@ interface ITaskParams {
   parameters?: string
   kernel?: string
   engine?: string
+  startupScript?: string
   executionTimeout?: string
   startTimeout?: string
   processDefinitionCode?: number
@@ -331,6 +364,9 @@ interface ITaskParams {
   minCpuCores?: string
   minMemorySpace?: string
   image?: string
+  command?: string
+  args?: string
+  customizedLabels?: ICustomLabel[]
   algorithm?: string
   params?: string
   searchParams?: string
@@ -383,6 +419,16 @@ interface ITaskParams {
   replicationInstanceArn?: string
   tableMappings?: string
   replicationTaskArn?: string
+  jsonFormat?: boolean
+  destinationLocationArn?: string
+  sourceLocationArn?: string
+  name?: string
+  cloudWatchLogGroupArn?: string
+  yamlContent?: string
+  paramScript?: ILocalParam[]
+  factoryName?: string
+  resourceGroupName?: string
+  pipelineName?: string
 }
 
 interface INodeData
@@ -400,6 +446,7 @@ interface INodeData
     >,
     ISqoopTargetData,
     ISqoopSourceData,
+    IDependentParameters,
     Omit<IRuleParameters, 'mapping_columns'> {
   id?: string
   taskType?: ITaskType
@@ -412,6 +459,7 @@ interface INodeData
   cpuQuota?: number
   memoryMax?: number
   flag?: 'YES' | 'NO'
+  isCache?: boolean
   taskGroupId?: number
   taskGroupPriority?: number
   taskPriority?: string
@@ -424,8 +472,8 @@ interface INodeData
   preTasks?: number[]
   preTaskOptions?: []
   postTaskOptions?: []
-  resourceList?: number[]
-  mainJar?: number
+  resourceList?: string[]
+  mainJar?: string
   timeoutSetting?: boolean
   isCustomTask?: boolean
   method?: string
@@ -443,10 +491,11 @@ interface INodeData
 interface ITaskData
   extends Omit<
     INodeData,
-    'timeoutFlag' | 'taskPriority' | 'timeoutNotifyStrategy'
+    'isCache' | 'timeoutFlag' | 'taskPriority' | 'timeoutNotifyStrategy'
   > {
   name?: string
   taskPriority?: string
+  isCache?: 'YES' | 'NO'
   timeoutFlag?: 'OPEN' | 'CLOSE'
   timeoutNotifyStrategy?: string | []
   taskParams?: ITaskParams
@@ -461,17 +510,21 @@ export {
   INodeData,
   ITaskParams,
   IOption,
+  IRenderOption,
   IDataBase,
   ModelType,
   SourceType,
   ISqoopSourceParams,
   ISqoopTargetParams,
   IDependTask,
-  IDependpendItem,
+  IDependentItem,
+  IDependentItemOptions,
+  IDependTaskOptions,
   IFormItem,
   IJsonItem,
   FormRules,
   IJsonItemParams,
   IResponseJsonItem,
-  IDateType
+  IDateType,
+  IDependentParameters
 }

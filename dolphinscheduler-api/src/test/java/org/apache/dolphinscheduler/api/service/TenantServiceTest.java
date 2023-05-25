@@ -20,6 +20,7 @@ package org.apache.dolphinscheduler.api.service;
 import static org.apache.dolphinscheduler.api.constants.ApiFuncIdentificationConstant.TENANT_CREATE;
 import static org.apache.dolphinscheduler.api.constants.ApiFuncIdentificationConstant.TENANT_DELETE;
 import static org.apache.dolphinscheduler.api.constants.ApiFuncIdentificationConstant.TENANT_UPDATE;
+import static org.mockito.ArgumentMatchers.any;
 
 import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.exceptions.ServiceException;
@@ -28,36 +29,39 @@ import org.apache.dolphinscheduler.api.service.impl.BaseServiceImpl;
 import org.apache.dolphinscheduler.api.service.impl.TenantServiceImpl;
 import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.api.utils.Result;
-import org.apache.dolphinscheduler.common.Constants;
+import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.enums.UserType;
-import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
 import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
 import org.apache.dolphinscheduler.dao.entity.Queue;
+import org.apache.dolphinscheduler.dao.entity.Schedule;
 import org.apache.dolphinscheduler.dao.entity.Tenant;
 import org.apache.dolphinscheduler.dao.entity.User;
-import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessInstanceMapper;
+import org.apache.dolphinscheduler.dao.mapper.ScheduleMapper;
 import org.apache.dolphinscheduler.dao.mapper.TenantMapper;
 import org.apache.dolphinscheduler.dao.mapper.UserMapper;
+import org.apache.dolphinscheduler.plugin.storage.api.StorageOperate;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Assert;
-import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +71,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 /**
  * tenant service test
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class TenantServiceTest {
 
     private static final Logger baseServiceLogger = LoggerFactory.getLogger(BaseServiceImpl.class);
@@ -83,7 +88,7 @@ public class TenantServiceTest {
     private TenantMapper tenantMapper;
 
     @Mock
-    private ProcessDefinitionMapper processDefinitionMapper;
+    private ScheduleMapper scheduleMapper;
 
     @Mock
     private ProcessInstanceMapper processInstanceMapper;
@@ -93,6 +98,9 @@ public class TenantServiceTest {
 
     @Mock
     private ResourcePermissionCheckService resourcePermissionCheckService;
+
+    @Mock
+    private StorageOperate storageOperate;
 
     private static final String tenantCode = "hayden";
     private static final String tenantDesc = "This is the tenant desc";
@@ -104,7 +112,7 @@ public class TenantServiceTest {
 
         User loginUser = getLoginUser();
         Mockito.when(tenantMapper.existTenant(tenantCode)).thenReturn(true);
-        Mockito.when(resourcePermissionCheckService.operationPermissionCheck(AuthorizationType.TENANT, null,
+        Mockito.when(resourcePermissionCheckService.operationPermissionCheck(AuthorizationType.TENANT,
                 loginUser.getId(), TENANT_CREATE, baseServiceLogger)).thenReturn(true);
         Mockito.when(resourcePermissionCheckService.resourcePermissionCheck(AuthorizationType.TENANT, null, 0,
                 baseServiceLogger)).thenReturn(true);
@@ -122,22 +130,22 @@ public class TenantServiceTest {
                 "this_is_a_very_long_string_this_is_a_very_long_string_this_is_a_very_long_string_this_is_a_very_long_string";
         exception = Assertions.assertThrows(ServiceException.class,
                 () -> tenantService.createTenant(loginUser, longStr, 1, tenantDesc));
-        Assert.assertEquals(Status.TENANT_FULL_NAME_TOO_LONG_ERROR.getMsg(), exception.getMessage());
+        Assertions.assertEquals(Status.TENANT_FULL_NAME_TOO_LONG_ERROR.getMsg(), exception.getMessage());
 
         // check tenant code invalid
         exception = Assertions.assertThrows(ServiceException.class,
                 () -> tenantService.createTenant(getLoginUser(), "%!1111", 1, tenantDesc));
-        Assert.assertEquals(Status.CHECK_OS_TENANT_CODE_ERROR.getMsg(), exception.getMessage());
+        Assertions.assertEquals(Status.CHECK_OS_TENANT_CODE_ERROR.getMsg(), exception.getMessage());
 
         // check exist
         exception = Assertions.assertThrows(ServiceException.class,
                 () -> tenantService.createTenant(loginUser, tenantCode, 1, tenantDesc));
         formatter = MessageFormat.format(Status.OS_TENANT_CODE_EXIST.getMsg(), tenantCode);
-        Assert.assertEquals(formatter, exception.getMessage());
+        Assertions.assertEquals(formatter, exception.getMessage());
 
         // success
         result = tenantService.createTenant(loginUser, "test", 1, tenantDesc);
-        Assert.assertEquals(Status.SUCCESS, result.get(Constants.STATUS));
+        Assertions.assertEquals(Status.SUCCESS, result.get(Constants.STATUS));
     }
 
     @Test
@@ -152,7 +160,7 @@ public class TenantServiceTest {
 
         // success
         Result result = tenantService.verifyTenantCode("s00000000000l887888885554444sfjdskfjslakslkdf");
-        Assert.assertEquals(Status.SUCCESS.getMsg(), result.getMsg());
+        Assertions.assertEquals(Status.SUCCESS.getMsg(), result.getMsg());
     }
 
     @Test
@@ -165,18 +173,18 @@ public class TenantServiceTest {
         ids.add(1);
         Mockito.when(resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.TENANT,
                 getLoginUser().getId(), tenantServiceImplLogger)).thenReturn(ids);
-        Mockito.when(tenantMapper.queryTenantPaging(Mockito.any(Page.class), Mockito.anyList(), Mockito.eq(tenantDesc)))
+        Mockito.when(tenantMapper.queryTenantPaging(any(Page.class), Mockito.anyList(), Mockito.eq(tenantDesc)))
                 .thenReturn(page);
         Result result = tenantService.queryTenantList(getLoginUser(), tenantDesc, 1, 10);
         PageInfo<Tenant> pageInfo = (PageInfo<Tenant>) result.getData();
-        Assert.assertTrue(CollectionUtils.isNotEmpty(pageInfo.getTotalList()));
+        Assertions.assertTrue(CollectionUtils.isNotEmpty(pageInfo.getTotalList()));
 
     }
 
     @Test
     public void testUpdateTenant() throws Exception {
         Mockito.when(tenantMapper.queryById(1)).thenReturn(getTenant());
-        Mockito.when(resourcePermissionCheckService.operationPermissionCheck(AuthorizationType.TENANT, null,
+        Mockito.when(resourcePermissionCheckService.operationPermissionCheck(AuthorizationType.TENANT,
                 getLoginUser().getId(), TENANT_UPDATE, baseServiceLogger)).thenReturn(true);
         Mockito.when(resourcePermissionCheckService.resourcePermissionCheck(AuthorizationType.TENANT, null, 0,
                 baseServiceLogger)).thenReturn(true);
@@ -189,23 +197,24 @@ public class TenantServiceTest {
 
         // success
         Map<String, Object> result = tenantService.updateTenant(getLoginUser(), 1, tenantCode, 1, tenantDesc);
-        Assert.assertEquals(Status.SUCCESS, result.get(Constants.STATUS));
+        Assertions.assertEquals(Status.SUCCESS, result.get(Constants.STATUS));
 
         // success update with same tenant code
         result = tenantService.updateTenant(getLoginUser(), 1, tenantCode, 1, tenantDesc);
-        Assert.assertEquals(Status.SUCCESS, result.get(Constants.STATUS));
+        Assertions.assertEquals(Status.SUCCESS, result.get(Constants.STATUS));
     }
 
     @Test
     public void testDeleteTenantById() throws Exception {
-        Mockito.when(resourcePermissionCheckService.operationPermissionCheck(AuthorizationType.TENANT, null,
+        Mockito.when(resourcePermissionCheckService.operationPermissionCheck(AuthorizationType.TENANT,
                 getLoginUser().getId(), TENANT_DELETE, baseServiceLogger)).thenReturn(true);
         Mockito.when(resourcePermissionCheckService.resourcePermissionCheck(AuthorizationType.TENANT, null, 0,
                 baseServiceLogger)).thenReturn(true);
         Mockito.when(tenantMapper.queryById(1)).thenReturn(getTenant());
-        Mockito.when(processInstanceMapper.queryByTenantIdAndStatus(1, Constants.NOT_TERMINATED_STATES))
+        Mockito.when(processInstanceMapper.queryByTenantCodeAndStatus(tenantCode,
+                org.apache.dolphinscheduler.service.utils.Constants.NOT_TERMINATED_STATES))
                 .thenReturn(getInstanceList());
-        Mockito.when(processDefinitionMapper.queryDefinitionListByTenant(2)).thenReturn(getDefinitionsList());
+        Mockito.when(scheduleMapper.queryScheduleListByTenant(tenantCode)).thenReturn(getScheduleList());
         Mockito.when(userMapper.queryUserListByTenant(3)).thenReturn(getUserList());
 
         // TENANT_NOT_EXIST
@@ -234,10 +243,14 @@ public class TenantServiceTest {
         Assertions.assertTrue(exception.getMessage().contains(prefix));
 
         // success
+        Mockito.when(processInstanceMapper.queryByTenantCodeAndStatus(tenantCode,
+                org.apache.dolphinscheduler.service.utils.Constants.NOT_TERMINATED_STATES))
+                .thenReturn(Collections.emptyList());
+        Mockito.when(scheduleMapper.queryScheduleListByTenant(tenantCode)).thenReturn(Collections.emptyList());
         Mockito.when(tenantMapper.queryById(4)).thenReturn(getTenant(4));
         Mockito.when(tenantMapper.deleteById(4)).thenReturn(1);
         Map<String, Object> result = tenantService.deleteTenantById(getLoginUser(), 4);
-        Assert.assertEquals(Status.SUCCESS, result.get(Constants.STATUS));
+        Assertions.assertEquals(Status.SUCCESS, result.get(Constants.STATUS));
     }
 
     @Test
@@ -251,7 +264,7 @@ public class TenantServiceTest {
 
         // success
         Result result = tenantService.verifyTenantCode("s00000000000l887888885554444sfjdskfjslakslkdf");
-        Assert.assertEquals(Status.SUCCESS.getMsg(), result.getMsg());
+        Assertions.assertEquals(Status.SUCCESS.getMsg(), result.getMsg());
     }
 
     @Test
@@ -262,13 +275,13 @@ public class TenantServiceTest {
         Mockito.when(tenantMapper.existTenant(tenantCode)).thenReturn(true);
         Mockito.when(tenantMapper.queryByTenantCode(tenantCode)).thenReturn(getTenant());
         tenant = tenantService.createTenantIfNotExists(tenantCode, tenantDesc, queue, queueName);
-        Assert.assertEquals(getTenant(), tenant);
+        Assertions.assertEquals(getTenant(), tenant);
 
         // Tenant not exists
         Mockito.when(tenantMapper.existTenant(tenantCode)).thenReturn(false);
         Mockito.when(queueService.createQueueIfNotExists(queue, queueName)).thenReturn(getQueue());
         tenant = tenantService.createTenantIfNotExists(tenantCode, tenantDesc, queue, queueName);
-        Assert.assertEquals(new Tenant(tenantCode, tenantDesc, getQueue().getId()), tenant);
+        Assertions.assertEquals(new Tenant(tenantCode, tenantDesc, getQueue().getId()), tenant);
     }
 
     /**
@@ -319,11 +332,11 @@ public class TenantServiceTest {
         return processInstances;
     }
 
-    private List<ProcessDefinition> getDefinitionsList() {
-        List<ProcessDefinition> processDefinitions = new ArrayList<>();
-        ProcessDefinition processDefinition = new ProcessDefinition();
-        processDefinitions.add(processDefinition);
-        return processDefinitions;
+    private List<Schedule> getScheduleList() {
+        List<Schedule> schedules = new ArrayList<>();
+        Schedule schedule = new Schedule();
+        schedules.add(schedule);
+        return schedules;
     }
 
     private Queue getQueue() {

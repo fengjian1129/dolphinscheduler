@@ -20,17 +20,21 @@ package org.apache.dolphinscheduler.plugin.task.k8s;
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.CLUSTER;
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.NAMESPACE_NAME;
 
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.k8s.AbstractK8sTask;
 import org.apache.dolphinscheduler.plugin.task.api.k8s.K8sTaskMainParameters;
+import org.apache.dolphinscheduler.plugin.task.api.model.Label;
 import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.K8sTaskParameters;
 import org.apache.dolphinscheduler.plugin.task.api.parser.ParamUtils;
-import org.apache.dolphinscheduler.spi.utils.JSONUtils;
+
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +57,8 @@ public class K8sTask extends AbstractK8sTask {
         super(taskRequest);
         this.taskExecutionContext = taskRequest;
         this.k8sTaskParameters = JSONUtils.parseObject(taskExecutionContext.getTaskParams(), K8sTaskParameters.class);
-        if (!k8sTaskParameters.checkParameters()) {
+        log.info("Initialize k8s task parameters {}", JSONUtils.toPrettyJsonString(k8sTaskParameters));
+        if (k8sTaskParameters == null || !k8sTaskParameters.checkParameters()) {
             throw new TaskException("K8S task params is not valid");
         }
     }
@@ -81,7 +86,22 @@ public class K8sTask extends AbstractK8sTask {
         k8sTaskMainParameters.setMinCpuCores(k8sTaskParameters.getMinCpuCores());
         k8sTaskMainParameters.setMinMemorySpace(k8sTaskParameters.getMinMemorySpace());
         k8sTaskMainParameters.setParamsMap(ParamUtils.convert(paramsMap));
+        k8sTaskMainParameters.setLabelMap(convertToLabelMap(k8sTaskParameters.getCustomizedLabels()));
+        k8sTaskMainParameters.setCommand(k8sTaskParameters.getCommand());
+        k8sTaskMainParameters.setArgs(k8sTaskParameters.getArgs());
         return JSONUtils.toJsonString(k8sTaskMainParameters);
+    }
+
+    public Map<String, String> convertToLabelMap(List<Label> customizedLabels) {
+        if (CollectionUtils.isEmpty(customizedLabels)) {
+            return Collections.emptyMap();
+        }
+
+        HashMap<String, String> labelMap = new HashMap<>();
+        customizedLabels.forEach(label -> {
+            labelMap.put(label.getLabel(), label.getValue());
+        });
+        return labelMap;
     }
 
 }

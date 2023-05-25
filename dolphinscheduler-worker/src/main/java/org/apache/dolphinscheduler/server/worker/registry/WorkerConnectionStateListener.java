@@ -17,33 +17,29 @@
 
 package org.apache.dolphinscheduler.server.worker.registry;
 
-import lombok.NonNull;
 import org.apache.dolphinscheduler.common.lifecycle.ServerLifeCycleManager;
 import org.apache.dolphinscheduler.registry.api.ConnectionListener;
 import org.apache.dolphinscheduler.registry.api.ConnectionState;
 import org.apache.dolphinscheduler.server.worker.config.WorkerConfig;
-import org.apache.dolphinscheduler.service.registry.RegistryClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class WorkerConnectionStateListener implements ConnectionListener {
 
-    private final Logger logger = LoggerFactory.getLogger(WorkerConnectionStateListener.class);
     private final WorkerConfig workerConfig;
-    private final RegistryClient registryClient;
     private final WorkerConnectStrategy workerConnectStrategy;
 
     public WorkerConnectionStateListener(@NonNull WorkerConfig workerConfig,
-                                         @NonNull RegistryClient registryClient,
                                          @NonNull WorkerConnectStrategy workerConnectStrategy) {
         this.workerConfig = workerConfig;
-        this.registryClient = registryClient;
         this.workerConnectStrategy = workerConnectStrategy;
     }
 
     @Override
     public void onUpdate(ConnectionState state) {
-        logger.info("Worker received a {} event from registry, the current server state is {}", state,
+        log.info("Worker received a {} event from registry, the current server state is {}", state,
                 ServerLifeCycleManager.getServerStatus());
         switch (state) {
             case CONNECTED:

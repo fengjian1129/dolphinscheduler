@@ -17,9 +17,9 @@
 
 package org.apache.dolphinscheduler.api.service.impl;
 
-import static org.apache.dolphinscheduler.common.Constants.DATA_LIST;
-import static org.apache.dolphinscheduler.spi.utils.Constants.CHANGE;
-import static org.apache.dolphinscheduler.spi.utils.Constants.SMALL;
+import static org.apache.dolphinscheduler.common.constants.Constants.CHANGE;
+import static org.apache.dolphinscheduler.common.constants.Constants.DATA_LIST;
+import static org.apache.dolphinscheduler.common.constants.Constants.SMALL;
 
 import org.apache.dolphinscheduler.api.dto.RuleDefinition;
 import org.apache.dolphinscheduler.api.enums.Status;
@@ -52,9 +52,9 @@ import org.apache.dolphinscheduler.spi.params.group.GroupParamsProps;
 import org.apache.dolphinscheduler.spi.params.input.InputParam;
 import org.apache.dolphinscheduler.spi.params.input.InputParamProps;
 import org.apache.dolphinscheduler.spi.params.select.SelectParam;
-import org.apache.dolphinscheduler.spi.utils.StringUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,8 +64,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -80,9 +80,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * DqRuleServiceImpl
  */
 @Service
+@Slf4j
 public class DqRuleServiceImpl extends BaseServiceImpl implements DqRuleService {
-
-    private final Logger logger = LoggerFactory.getLogger(DqRuleServiceImpl.class);
 
     @Autowired
     private DqRuleMapper dqRuleMapper;
@@ -240,7 +239,7 @@ public class DqRuleServiceImpl extends BaseServiceImpl implements DqRuleService 
         try {
             result = mapper.writeValueAsString(params);
         } catch (JsonProcessingException e) {
-            logger.error("Json parse error.", e);
+            log.error("Json parse error.", e);
         }
 
         return result;

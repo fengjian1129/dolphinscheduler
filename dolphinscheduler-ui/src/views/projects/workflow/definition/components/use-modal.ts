@@ -38,6 +38,7 @@ import {
 import { parseTime } from '@/common/common'
 import { EnvironmentItem } from '@/service/modules/environment/types'
 import { ITimingState, ProcessInstanceReq } from './types'
+import { queryTenantList } from '@/service/modules/tenants'
 
 export function useModal(
   state: any,
@@ -50,6 +51,7 @@ export function useModal(
   const variables = reactive<ITimingState>({
     projectCode: Number(route.params.projectCode),
     workerGroups: [],
+    tenantList: [],
     alertGroups: [],
     environmentList: [],
     startParamsList: [],
@@ -85,13 +87,14 @@ export function useModal(
     }
   }
 
-  const handleStartDefinition = async (code: number) => {
+  const handleStartDefinition = async (code: number, version: number) => {
     await state.startFormRef.validate()
 
     if (state.saving) return
     state.saving = true
     try {
       state.startForm.processDefinitionCode = code
+      state.startForm.version = version
       const params = omit(state.startForm, [
         'startEndTime',
         'scheduleTime',
@@ -125,7 +128,6 @@ export function useModal(
       params.startParams = !_.isEmpty(startParams)
         ? JSON.stringify(startParams)
         : ''
-
       await startProcessInstance(params, variables.projectCode)
       window.$message.success(t('project.workflow.success'))
       state.saving = false
@@ -219,6 +221,7 @@ export function useModal(
         ? state.timingForm.warningGroupId
         : 0,
       workerGroup: state.timingForm.workerGroup,
+      tenantCode: state.timingForm.tenantCode,
       environmentCode: state.timingForm.environmentCode
     }
     return data
@@ -229,6 +232,15 @@ export function useModal(
       variables.workerGroups = res.map((item: string) => ({
         label: item,
         value: item
+      }))
+    })
+  }
+
+  const getTenantList = () => {
+    queryTenantList().then((res: any) => {
+      variables.tenantList = res.map((item: any) => ({
+        label: item.tenantCode,
+        value: item.tenantCode
       }))
     })
   }
@@ -300,6 +312,7 @@ export function useModal(
     handleUpdateTiming,
     handleBatchCopyDefinition,
     getWorkerGroups,
+    getTenantList,
     getAlertGroups,
     getEnvironmentList,
     getStartParamsList,

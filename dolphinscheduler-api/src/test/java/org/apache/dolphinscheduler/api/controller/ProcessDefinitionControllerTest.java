@@ -21,7 +21,7 @@ import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.service.impl.ProcessDefinitionServiceImpl;
 import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.api.utils.Result;
-import org.apache.dolphinscheduler.common.Constants;
+import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.enums.ProcessExecutionTypeEnum;
 import org.apache.dolphinscheduler.common.enums.ReleaseState;
 import org.apache.dolphinscheduler.common.enums.UserType;
@@ -37,21 +37,20 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * process definition controller test
  */
-@RunWith(MockitoJUnitRunner.Silent.class)
+@ExtendWith(MockitoExtension.class)
 public class ProcessDefinitionControllerTest {
 
     @InjectMocks
@@ -62,7 +61,7 @@ public class ProcessDefinitionControllerTest {
 
     protected User user;
 
-    @Before
+    @BeforeEach
     public void before() {
         User loginUser = new User();
         loginUser.setId(1);
@@ -91,22 +90,21 @@ public class ProcessDefinitionControllerTest {
         String globalParams = "[]";
         String locations = "[]";
         int timeout = 0;
-        String tenantCode = "root";
         Map<String, Object> result = new HashMap<>();
         putMsg(result, Status.SUCCESS);
         result.put(Constants.DATA_LIST, 1);
 
         Mockito.when(
                 processDefinitionService.createProcessDefinition(user, projectCode, name, description, globalParams,
-                        locations, timeout, tenantCode, relationJson, taskDefinitionJson, "",
+                        locations, timeout, relationJson, taskDefinitionJson, "",
                         ProcessExecutionTypeEnum.PARALLEL))
                 .thenReturn(result);
 
         Result response =
                 processDefinitionController.createProcessDefinition(user, projectCode, name, description, globalParams,
-                        locations, timeout, tenantCode, relationJson, taskDefinitionJson, "",
+                        locations, timeout, relationJson, taskDefinitionJson, "",
                         ProcessExecutionTypeEnum.PARALLEL);
-        Assert.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
+        Assertions.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
     }
 
     private void putMsg(Map<String, Object> result, Status status, Object... statusParams) {
@@ -138,7 +136,7 @@ public class ProcessDefinitionControllerTest {
                 .thenReturn(result);
 
         Result response = processDefinitionController.verifyProcessDefinitionName(user, projectCode, name, 0);
-        Assert.assertTrue(response.isStatus(Status.PROCESS_DEFINITION_NAME_EXIST));
+        Assertions.assertTrue(response.isStatus(Status.PROCESS_DEFINITION_NAME_EXIST));
     }
 
     @Test
@@ -161,7 +159,6 @@ public class ProcessDefinitionControllerTest {
         String description = "desc test";
         String globalParams = "[]";
         int timeout = 0;
-        String tenantCode = "root";
         long code = 123L;
         Map<String, Object> result = new HashMap<>();
         putMsg(result, Status.SUCCESS);
@@ -169,14 +166,14 @@ public class ProcessDefinitionControllerTest {
 
         Mockito.when(processDefinitionService.updateProcessDefinition(user, projectCode, name, code, description,
                 globalParams,
-                locations, timeout, tenantCode, relationJson, taskDefinitionJson, "",
+                locations, timeout, relationJson, taskDefinitionJson, "",
                 ProcessExecutionTypeEnum.PARALLEL)).thenReturn(result);
 
         Result response = processDefinitionController.updateProcessDefinition(user, projectCode, name, code,
                 description, globalParams,
-                locations, timeout, tenantCode, relationJson, taskDefinitionJson, "", ProcessExecutionTypeEnum.PARALLEL,
+                locations, timeout, relationJson, taskDefinitionJson, "", ProcessExecutionTypeEnum.PARALLEL,
                 ReleaseState.OFFLINE);
-        Assert.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
+        Assertions.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
     }
 
     @Test
@@ -190,7 +187,7 @@ public class ProcessDefinitionControllerTest {
                 .thenReturn(result);
         Result response =
                 processDefinitionController.releaseProcessDefinition(user, projectCode, id, ReleaseState.OFFLINE);
-        Assert.assertTrue(response != null && response.isSuccess());
+        Assertions.assertTrue(response != null && response.isSuccess());
     }
 
     @Test
@@ -215,7 +212,7 @@ public class ProcessDefinitionControllerTest {
         Mockito.when(processDefinitionService.queryProcessDefinitionByCode(user, projectCode, code)).thenReturn(result);
         Result response = processDefinitionController.queryProcessDefinitionByCode(user, projectCode, code);
 
-        Assert.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
+        Assertions.assertEquals(Status.SUCCESS.getCode(), response.getCode().intValue());
     }
 
     @Test
@@ -231,7 +228,7 @@ public class ProcessDefinitionControllerTest {
                 .thenReturn(result);
         Result response = processDefinitionController.copyProcessDefinition(user, projectCode, code, targetProjectCode);
 
-        Assert.assertTrue(response != null && response.isSuccess());
+        Assertions.assertTrue(response != null && response.isSuccess());
     }
 
     @Test
@@ -247,7 +244,7 @@ public class ProcessDefinitionControllerTest {
                 .thenReturn(result);
         Result response = processDefinitionController.moveProcessDefinition(user, projectCode, id, targetProjectCode);
 
-        Assert.assertTrue(response != null && response.isSuccess());
+        Assertions.assertTrue(response != null && response.isSuccess());
     }
 
     @Test
@@ -262,7 +259,7 @@ public class ProcessDefinitionControllerTest {
         Mockito.when(processDefinitionService.queryProcessDefinitionList(user, projectCode)).thenReturn(result);
         Result response = processDefinitionController.queryProcessDefinitionList(user, projectCode);
 
-        Assert.assertTrue(response != null && response.isSuccess());
+        Assertions.assertTrue(response != null && response.isSuccess());
     }
 
     public List<ProcessDefinition> getDefinitionList() {
@@ -317,7 +314,7 @@ public class ProcessDefinitionControllerTest {
                 .thenReturn(result);
         Result response = processDefinitionController.getNodeListByDefinitionCode(user, projectCode, code);
 
-        Assert.assertTrue(response != null && response.isSuccess());
+        Assertions.assertTrue(response != null && response.isSuccess());
     }
 
     @Test
@@ -332,7 +329,7 @@ public class ProcessDefinitionControllerTest {
                 .thenReturn(result);
         Result response = processDefinitionController.getNodeListMapByDefinitionCodes(user, projectCode, codeList);
 
-        Assert.assertTrue(response != null && response.isSuccess());
+        Assertions.assertTrue(response != null && response.isSuccess());
     }
 
     @Test
@@ -345,7 +342,7 @@ public class ProcessDefinitionControllerTest {
                 .thenReturn(result);
         Result response = processDefinitionController.queryAllProcessDefinitionByProjectCode(user, projectCode);
 
-        Assert.assertTrue(response != null && response.isSuccess());
+        Assertions.assertTrue(response != null && response.isSuccess());
     }
 
     @Test
@@ -360,7 +357,7 @@ public class ProcessDefinitionControllerTest {
         Mockito.when(processDefinitionService.viewTree(user, projectCode, processId, limit)).thenReturn(result);
         Result response = processDefinitionController.viewTree(user, projectCode, processId, limit);
 
-        Assert.assertTrue(response != null && response.isSuccess());
+        Assertions.assertTrue(response != null && response.isSuccess());
     }
 
     @Test
@@ -378,7 +375,7 @@ public class ProcessDefinitionControllerTest {
         Result<PageInfo<ProcessDefinition>> response = processDefinitionController
                 .queryProcessDefinitionListPaging(user, projectCode, searchVal, "", userId, pageNo, pageSize);
 
-        Assert.assertTrue(response != null && response.isSuccess());
+        Assertions.assertTrue(response != null && response.isSuccess());
     }
 
     @Test
@@ -405,7 +402,7 @@ public class ProcessDefinitionControllerTest {
         Result result = processDefinitionController.queryProcessDefinitionVersions(
                 user, projectCode, 1, 10, 1);
 
-        Assert.assertEquals(Status.SUCCESS.getCode(), (int) result.getCode());
+        Assertions.assertEquals(Status.SUCCESS.getCode(), (int) result.getCode());
     }
 
     @Test
@@ -417,7 +414,7 @@ public class ProcessDefinitionControllerTest {
                 .thenReturn(resultMap);
         Result result = processDefinitionController.switchProcessDefinitionVersion(user, projectCode, 1, 10);
 
-        Assert.assertEquals(Status.SUCCESS.getCode(), (int) result.getCode());
+        Assertions.assertEquals(Status.SUCCESS.getCode(), (int) result.getCode());
     }
 
     @Test
@@ -429,7 +426,21 @@ public class ProcessDefinitionControllerTest {
                 user, projectCode, 1, 10)).thenReturn(resultMap);
         Result result = processDefinitionController.deleteProcessDefinitionVersion(
                 user, projectCode, 1, 10);
-        Assert.assertEquals(Status.SUCCESS.getCode(), (int) result.getCode());
+        Assertions.assertEquals(Status.SUCCESS.getCode(), (int) result.getCode());
+    }
+
+    @Test
+    public void testViewVariables() {
+        long projectCode = 1L;
+        Map<String, Object> resultMap = new HashMap<>();
+        putMsg(resultMap, Status.SUCCESS);
+
+        Mockito.when(processDefinitionService.viewVariables(user, projectCode, 1))
+                .thenReturn(resultMap);
+
+        Result result = processDefinitionController.viewVariables(user, projectCode, 1L);
+
+        Assertions.assertEquals(Status.SUCCESS.getCode(), result.getCode().intValue());
     }
 
 }

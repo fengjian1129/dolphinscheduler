@@ -11,14 +11,29 @@ This node is used to perform http type tasks such as the common POST and GET req
 
 ## Task Parameters
 
-- Please refer to [DolphinScheduler Task Parameters Appendix](appendix.md#default-task-parameters) for default parameters.
+[//]: # (TODO: use the commented anchor below once our website template supports this syntax)
+[//]: # (- Please refer to [DolphinScheduler Task Parameters Appendix]&#40;appendix.md#default-task-parameters&#41; `Default Task Parameters` section for default parameters.)
 
-|    **Parameter**     |                                                                        **Description**                                                                        |
-|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|---|--------------------|---|---|-------------------------|-----------------------------------------------------------------------------------------------|
-| Request address      | HTTP request URL.                                                                                                                                             |
-| Request type         | Supports GET, POSt, HEAD, PUT, DELETE.                                                                                                                           || Request parameters | Supports Parameter, Body, Headers. || Verification conditions | Supports default response code, custom response code, content included, content not included. |
-| Verification content | When the verification condition selects a custom response code, the content contains, and the content does not contain, the verification content is required. |
-| Custom parameter     | It is a user-defined parameter of http part, which will replace the content with `${variable}` in the script.                                                 |
+- Please refer to [DolphinScheduler Task Parameters Appendix](appendix.md) `Default Task Parameters` section for default parameters.
+
+|      **Parameter**      |                                                                        **Description**                                                                        |
+|-------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Request address         | HTTP request URL.                                                                                                                                             |
+| Request type            | Supports GET, POST, HEAD, PUT, DELETE.                                                                                                                        |
+| Request parameters      | Supports Parameter, Body, Headers.                                                                                                                            |
+| Verification conditions | Supports default response code, custom response code, content included, content not included.                                                                 |
+| Verification content    | When the verification condition selects a custom response code, the content contains, and the content does not contain, the verification content is required. |
+| Custom parameter        | It is a user-defined parameter of http part, which will replace the content with `${variable}` in the script.                                                 |
+
+## Task Output Parameters
+
+| **Task Parameter** |           **Description**           |
+|--------------------|-------------------------------------|
+| response           | VARCHAR, http request return result |
+
+Can use `${taskName.response}` to reference task output parameters in downstream tasks.
+
+For example, if the current task1 is a http task, the downstream task can use `${task1.response}` to reference the output parameters of task1.
 
 ## Example
 

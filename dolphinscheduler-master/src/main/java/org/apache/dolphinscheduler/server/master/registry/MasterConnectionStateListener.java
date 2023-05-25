@@ -17,18 +17,17 @@
 
 package org.apache.dolphinscheduler.server.master.registry;
 
-import lombok.NonNull;
 import org.apache.dolphinscheduler.common.lifecycle.ServerLifeCycleManager;
 import org.apache.dolphinscheduler.registry.api.ConnectionListener;
 import org.apache.dolphinscheduler.registry.api.ConnectionState;
+import org.apache.dolphinscheduler.registry.api.RegistryClient;
 import org.apache.dolphinscheduler.server.master.config.MasterConfig;
-import org.apache.dolphinscheduler.service.registry.RegistryClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class MasterConnectionStateListener implements ConnectionListener {
-
-    private static final Logger logger = LoggerFactory.getLogger(MasterConnectionStateListener.class);
 
     private final MasterConfig masterConfig;
     private final RegistryClient registryClient;
@@ -44,7 +43,7 @@ public class MasterConnectionStateListener implements ConnectionListener {
 
     @Override
     public void onUpdate(ConnectionState state) {
-        logger.info("Master received a {} event from registry, the current server state is {}", state,
+        log.info("Master received a {} event from registry, the current server state is {}", state,
                 ServerLifeCycleManager.getServerStatus());
         switch (state) {
             case CONNECTED:

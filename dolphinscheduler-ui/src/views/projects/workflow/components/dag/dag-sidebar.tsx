@@ -51,29 +51,29 @@ export default defineComponent({
           return {
             ...item,
             starHover: false,
-            type: item.taskName
+            type: item.taskType
           }
         })
         variables.universal = variables.dataList.filter(
-          (item: any) => item.taskType === 'Universal'
+          (item: any) => item.taskCategory === 'Universal'
         )
         variables.cloud = variables.dataList.filter(
-          (item: any) => item.taskType === 'Cloud'
+          (item: any) => item.taskCategory === 'Cloud'
         )
         variables.logic = variables.dataList.filter(
-          (item: any) => item.taskType === 'Logic'
+          (item: any) => item.taskCategory === 'Logic'
         )
         variables.di = variables.dataList.filter(
-          (item: any) => item.taskType === 'DataIntegration'
+          (item: any) => item.taskCategory === 'DataIntegration'
         )
         variables.dq = variables.dataList.filter(
-          (item: any) => item.taskType === 'DataQuality'
+          (item: any) => item.taskCategory === 'DataQuality'
         )
         variables.ml = variables.dataList.filter(
-          (item: any) => item.taskType === 'MachineLearning'
+          (item: any) => item.taskCategory === 'MachineLearning'
         )
         variables.other = variables.dataList.filter(
-          (item: any) => item.taskType === 'Other'
+          (item: any) => item.taskCategory === 'Other'
         )
         variables.fav = variables.dataList.filter(
           (item: any) => item.collection === true
@@ -83,10 +83,10 @@ export default defineComponent({
 
     const handleCollection = (item: any) => {
       item.collection
-        ? CancelCollection(item.taskName).then(() => {
+        ? CancelCollection(item.taskType).then(() => {
             handleDagMenu()
           })
-        : Collection(item.taskName).then(() => {
+        : Collection(item.taskType).then(() => {
             handleDagMenu()
           })
       item.collection = !item.collection
@@ -96,7 +96,7 @@ export default defineComponent({
       handleDagMenu()
     })
 
-    return () =>
+    return () => (
       <div class={styles.sidebar}>
         <NCollapse default-expanded-names='1' accordion>
           {variables.fav.length > 0 && (
@@ -120,7 +120,7 @@ export default defineComponent({
                           styles['icon-' + task.type.toLocaleLowerCase()]
                         ]}
                       />
-                      <span>{task.taskName}</span>
+                      <span>{task.taskType}</span>
                       <div
                         class={styles.stars}
                         onMouseenter={() => {
@@ -139,11 +139,7 @@ export default defineComponent({
                               : '#ccc'
                           }
                         >
-                          {task.collection ? (
-                            <StarFilled />
-                          ) : (
-                            <StarOutlined />
-                          )}
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
                         </NIcon>
                       </div>
                     </div>
@@ -173,7 +169,7 @@ export default defineComponent({
                           styles['icon-' + task.type.toLocaleLowerCase()]
                         ]}
                       />
-                      <span>{task.taskName}</span>
+                      <span>{task.taskType}</span>
                       <div
                         class={styles.stars}
                         onMouseenter={() => {
@@ -192,11 +188,7 @@ export default defineComponent({
                               : '#ccc'
                           }
                         >
-                          {task.collection ? (
-                            <StarFilled />
-                          ) : (
-                            <StarOutlined />
-                          )}
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
                         </NIcon>
                       </div>
                     </div>
@@ -226,7 +218,7 @@ export default defineComponent({
                           styles['icon-' + task.type.toLocaleLowerCase()]
                         ]}
                       />
-                      <span>{task.taskName}</span>
+                      <span>{task.taskType}</span>
                       <div
                         class={styles.stars}
                         onMouseenter={() => {
@@ -245,11 +237,7 @@ export default defineComponent({
                               : '#ccc'
                           }
                         >
-                          {task.collection ? (
-                            <StarFilled />
-                          ) : (
-                            <StarOutlined />
-                          )}
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
                         </NIcon>
                       </div>
                     </div>
@@ -279,7 +267,7 @@ export default defineComponent({
                           styles['icon-' + task.type.toLocaleLowerCase()]
                         ]}
                       />
-                      <span>{task.taskName}</span>
+                      <span>{task.taskType}</span>
                       <div
                         class={styles.stars}
                         onMouseenter={() => {
@@ -298,11 +286,7 @@ export default defineComponent({
                               : '#ccc'
                           }
                         >
-                          {task.collection ? (
-                            <StarFilled />
-                          ) : (
-                            <StarOutlined />
-                          )}
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
                         </NIcon>
                       </div>
                     </div>
@@ -332,7 +316,7 @@ export default defineComponent({
                           styles['icon-' + task.type.toLocaleLowerCase()]
                         ]}
                       />
-                      <span>{task.taskName}</span>
+                      <span>{task.taskType}</span>
                       <div
                         class={styles.stars}
                         onMouseenter={() => {
@@ -351,11 +335,7 @@ export default defineComponent({
                               : '#ccc'
                           }
                         >
-                          {task.collection ? (
-                            <StarFilled />
-                          ) : (
-                            <StarOutlined />
-                          )}
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
                         </NIcon>
                       </div>
                     </div>
@@ -385,7 +365,7 @@ export default defineComponent({
                           styles['icon-' + task.type.toLocaleLowerCase()]
                         ]}
                       />
-                      <span>{task.taskName}</span>
+                      <span>{task.taskType}</span>
                       <div
                         class={styles.stars}
                         onMouseenter={() => {
@@ -404,11 +384,7 @@ export default defineComponent({
                               : '#ccc'
                           }
                         >
-                          {task.collection ? (
-                            <StarFilled />
-                          ) : (
-                            <StarOutlined />
-                          )}
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
                         </NIcon>
                       </div>
                     </div>
@@ -420,7 +396,7 @@ export default defineComponent({
           {variables.ml.length > 0 && (
             <NCollapseItem
               title={t('project.menu.ml')}
-              name='5'
+              name='6'
               class='task-cate-ml'
               v-slots={{
                 default: () => {
@@ -438,7 +414,7 @@ export default defineComponent({
                           styles['icon-' + task.type.toLocaleLowerCase()]
                         ]}
                       />
-                      <span>{task.taskName}</span>
+                      <span>{task.taskType}</span>
                       <div
                         class={styles.stars}
                         onMouseenter={() => {
@@ -457,11 +433,7 @@ export default defineComponent({
                               : '#ccc'
                           }
                         >
-                          {task.collection ? (
-                            <StarFilled />
-                          ) : (
-                            <StarOutlined />
-                          )}
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
                         </NIcon>
                       </div>
                     </div>
@@ -473,7 +445,7 @@ export default defineComponent({
           {variables.other.length > 0 && (
             <NCollapseItem
               title={t('project.menu.other')}
-              name='6'
+              name='7'
               class='task-cate-other'
               v-slots={{
                 default: () => {
@@ -491,7 +463,7 @@ export default defineComponent({
                           styles['icon-' + task.type.toLocaleLowerCase()]
                         ]}
                       />
-                      <span>{task.taskName}</span>
+                      <span>{task.taskType}</span>
                       <div
                         class={styles.stars}
                         onMouseenter={() => {
@@ -510,11 +482,7 @@ export default defineComponent({
                               : '#ccc'
                           }
                         >
-                          {task.collection ? (
-                            <StarFilled />
-                          ) : (
-                            <StarOutlined />
-                          )}
+                          {task.collection ? <StarFilled /> : <StarOutlined />}
                         </NIcon>
                       </div>
                     </div>
@@ -525,5 +493,6 @@ export default defineComponent({
           )}
         </NCollapse>
       </div>
+    )
   }
 })

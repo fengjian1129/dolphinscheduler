@@ -53,13 +53,20 @@ type TaskType =
   | 'PYTORCH'
   | 'HIVECLI'
   | 'DMS'
+  | 'DATASYNC'
+  | 'KUBEFLOW'
+  | 'LINKIS'
+  | 'DATA_FACTORY'
+  | 'REMOTESHELL'
 
 type ProgramType = 'JAVA' | 'SCALA' | 'PYTHON'
+
 type DependentResultType = {
-  [key: string]: 'SUCCESS' | 'WAITING_THREAD' | 'FAILURE'
+  [key: string]: 'SUCCESS' | 'FAILURE'
 }
+
 type BDependentResultType = {
-  [key: string]: 'SUCCESS' | 'WAITING_THREAD' | 'FAILED'
+  [key: string]: 'SUCCESS' | 'FAILED'
 }
 
 interface IResource {

@@ -17,19 +17,19 @@
 
 package org.apache.dolphinscheduler.server.worker.runner;
 
-import org.apache.dolphinscheduler.common.Constants;
-import org.apache.dolphinscheduler.common.storage.StorageOperate;
+import org.apache.dolphinscheduler.common.constants.Constants;
+import org.apache.dolphinscheduler.plugin.storage.api.StorageOperate;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
+import org.apache.dolphinscheduler.plugin.task.api.TaskPluginManager;
 import org.apache.dolphinscheduler.plugin.task.api.enums.TaskExecutionStatus;
 import org.apache.dolphinscheduler.server.worker.config.WorkerConfig;
+import org.apache.dolphinscheduler.server.worker.registry.WorkerRegistryClient;
 import org.apache.dolphinscheduler.server.worker.rpc.WorkerMessageSender;
-import org.apache.dolphinscheduler.service.alert.AlertClientService;
-import org.apache.dolphinscheduler.service.task.TaskPluginManager;
-import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
-import org.mockito.Mockito;
+import org.apache.dolphinscheduler.server.worker.rpc.WorkerRpcClient;
 
-import java.util.Date;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 public class DefaultWorkerDelayTaskExecuteRunnableTest {
 
@@ -41,11 +41,13 @@ public class DefaultWorkerDelayTaskExecuteRunnableTest {
 
     private WorkerMessageSender workerMessageSender = Mockito.mock(WorkerMessageSender.class);
 
-    private AlertClientService alertClientService = Mockito.mock(AlertClientService.class);
+    private WorkerRpcClient alertClientService = Mockito.mock(WorkerRpcClient.class);
 
     private TaskPluginManager taskPluginManager = Mockito.mock(TaskPluginManager.class);
 
     private StorageOperate storageOperate = Mockito.mock(StorageOperate.class);
+
+    private WorkerRegistryClient workerRegistryClient = Mockito.mock(WorkerRegistryClient.class);
 
     @Test
     public void testDryRun() {
@@ -53,18 +55,16 @@ public class DefaultWorkerDelayTaskExecuteRunnableTest {
                 .dryRun(Constants.DRY_RUN_FLAG_YES)
                 .taskInstanceId(0)
                 .processDefineId(0)
-                .firstSubmitTime(new Date())
-                .taskLogName("TestLogName")
+                .firstSubmitTime(System.currentTimeMillis())
                 .build();
         WorkerTaskExecuteRunnable workerTaskExecuteRunnable = new DefaultWorkerDelayTaskExecuteRunnable(
                 taskExecutionContext,
                 workerConfig,
-                masterAddress,
                 workerMessageSender,
                 alertClientService,
                 taskPluginManager,
-                storageOperate
-        );
+                storageOperate,
+                workerRegistryClient);
 
         Assertions.assertAll(workerTaskExecuteRunnable::run);
         Assertions.assertEquals(TaskExecutionStatus.SUCCESS, taskExecutionContext.getCurrentExecutionStatus());
@@ -77,20 +77,19 @@ public class DefaultWorkerDelayTaskExecuteRunnableTest {
                 .testFlag(Constants.TEST_FLAG_YES)
                 .taskInstanceId(0)
                 .processDefineId(0)
-                .firstSubmitTime(new Date())
-                .taskLogName("TestLogName")
+                .firstSubmitTime(System.currentTimeMillis())
                 .taskType("SQL")
-                .taskParams("{\"localParams\":[],\"resourceList\":[],\"type\":\"POSTGRESQL\",\"datasource\":null,\"sql\":\"select * from t_ds_user\",\"sqlType\":\"0\",\"preStatements\":[],\"postStatements\":[],\"segmentSeparator\":\"\",\"displayRows\":10,\"conditionResult\":\"null\",\"dependence\":\"null\",\"switchResult\":\"null\",\"waitStartTimeout\":null}")
+                .taskParams(
+                        "{\"localParams\":[],\"resourceList\":[],\"type\":\"POSTGRESQL\",\"datasource\":null,\"sql\":\"select * from t_ds_user\",\"sqlType\":\"0\",\"preStatements\":[],\"postStatements\":[],\"segmentSeparator\":\"\",\"displayRows\":10,\"conditionResult\":\"null\",\"dependence\":\"null\",\"switchResult\":\"null\",\"waitStartTimeout\":null}")
                 .build();
         WorkerTaskExecuteRunnable workerTaskExecuteRunnable = new DefaultWorkerDelayTaskExecuteRunnable(
                 taskExecutionContext,
                 workerConfig,
-                masterAddress,
                 workerMessageSender,
                 alertClientService,
                 taskPluginManager,
-                storageOperate
-        );
+                storageOperate,
+                workerRegistryClient);
 
         Assertions.assertAll(workerTaskExecuteRunnable::run);
         Assertions.assertEquals(TaskExecutionStatus.FAILURE, taskExecutionContext.getCurrentExecutionStatus());

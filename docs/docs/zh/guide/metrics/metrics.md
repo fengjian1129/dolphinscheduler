@@ -17,7 +17,7 @@ cd dolphinscheduler-meter/src/main/resources/grafana-demo
 docker compose up
 ```
 
-然后，您即可通过http://localhost/3001`链接访问`Grafana`面板。
+然后，您即可通过`http://localhost:3001`链接访问`Grafana`面板。
 
 ![image.png](../../../../img/metrics/metrics-master.png)
 ![image.png](../../../../img/metrics/metrics-worker.png)
@@ -83,7 +83,7 @@ metrics exporter端口`server.port`是在application.yaml里定义的: master: `
 
 - ds.workflow.create.command.count: (counter) 工作量创建并插入的命令数量
 - ds.workflow.instance.running: (gauge) 正在运行的工作流实例数量
-- ds.workflow.instance.count: (counter) 工作流实例数量，由tag `state`按状态切分：
+- ds.workflow.instance.count: (counter) 工作流实例数量，由tag `process.definition.code` 和 `state` 切分。您可以通过 `process.definition.code` 这个tag筛选出和某个workflow相关的指标，这里的 `process.definition.code` 指的是您工作流定义的编号代码。工作流实例有如下七种状态：
   - submit：已提交的工作量实例数量
   - timeout：运行超时的工作流实例数量
   - finish：已完成的工作流实例数量，包含成功和失败
@@ -111,7 +111,11 @@ metrics exporter端口`server.port`是在application.yaml里定义的: master: `
 
 ### Api Server指标
 
-- 目前我们尚未提供任何Api Server指标
+- ds.api.request.count: (counter) api请求次数
+- ds.api.response.count: (counter) api响应次数，可由标签`code`切分
+- ds.api.response.time: (histogram) api响应时间分布
+- ds.api.resource.upload.size: (histogram) api上传资源文件大小的分布（bytes）
+- ds.api.resource.download.size: (histogram) api下载资源文件大小的分布（bytes）
 
 ### Alert Server指标
 

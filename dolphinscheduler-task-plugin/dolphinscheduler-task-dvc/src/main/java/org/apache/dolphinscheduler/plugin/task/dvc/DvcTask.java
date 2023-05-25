@@ -19,6 +19,7 @@ package org.apache.dolphinscheduler.plugin.task.dvc;
 
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.EXIT_CODE_FAILURE;
 
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.plugin.task.api.AbstractTask;
 import org.apache.dolphinscheduler.plugin.task.api.ShellCommandExecutor;
 import org.apache.dolphinscheduler.plugin.task.api.TaskCallBack;
@@ -26,7 +27,6 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskException;
 import org.apache.dolphinscheduler.plugin.task.api.TaskExecutionContext;
 import org.apache.dolphinscheduler.plugin.task.api.model.TaskResponse;
 import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
-import org.apache.dolphinscheduler.spi.utils.JSONUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,17 +60,17 @@ public class DvcTask extends AbstractTask {
         super(taskExecutionContext);
 
         this.taskExecutionContext = taskExecutionContext;
-        this.shellCommandExecutor = new ShellCommandExecutor(this::logHandle, taskExecutionContext, logger);
+        this.shellCommandExecutor = new ShellCommandExecutor(this::logHandle, taskExecutionContext, log);
     }
 
     @Override
     public void init() {
-        logger.info("dvc task params {}", taskExecutionContext.getTaskParams());
 
         parameters = JSONUtils.parseObject(taskExecutionContext.getTaskParams(), DvcParameters.class);
+        log.info("Initialize dvc task params {}", JSONUtils.toPrettyJsonString(parameters));
 
-        if (!parameters.checkParameters()) {
-            throw new RuntimeException("dvc task params is not valid");
+        if (parameters == null || !parameters.checkParameters()) {
+            throw new TaskException("dvc task params is not valid");
         }
     }
 
@@ -79,17 +79,17 @@ public class DvcTask extends AbstractTask {
         try {
             // construct process
             String command = buildCommand();
-            TaskResponse commandExecuteResult = shellCommandExecutor.run(command);
+            TaskResponse commandExecuteResult = shellCommandExecutor.run(command, taskCallBack);
             setExitStatusCode(commandExecuteResult.getExitStatusCode());
             setProcessId(commandExecuteResult.getProcessId());
             parameters.dealOutParam(shellCommandExecutor.getVarPool());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.error("The current DvcTask has been interrupted", e);
+            log.error("The current DvcTask has been interrupted", e);
             setExitStatusCode(EXIT_CODE_FAILURE);
             throw new TaskException("The current DvcTask has been interrupted", e);
         } catch (Exception e) {
-            logger.error("dvc task error", e);
+            log.error("dvc task error", e);
             setExitStatusCode(EXIT_CODE_FAILURE);
             throw new TaskException("Execute dvc task failed", e);
         }
@@ -115,7 +115,7 @@ public class DvcTask extends AbstractTask {
         } else if (taskType.equals(DvcConstants.DVC_TASK_TYPE.INIT)) {
             command = buildInitDvcCommond();
         }
-        logger.info("Run DVC task with command: \n{}", command);
+        log.info("Run DVC task with command: \n{}", command);
         return command;
     }
 

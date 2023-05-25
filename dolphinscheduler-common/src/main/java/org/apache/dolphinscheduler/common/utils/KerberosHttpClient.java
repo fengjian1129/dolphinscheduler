@@ -17,7 +17,7 @@
 
 package org.apache.dolphinscheduler.common.utils;
 
-import org.apache.dolphinscheduler.common.Constants;
+import org.apache.dolphinscheduler.common.constants.Constants;
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -40,14 +40,13 @@ import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * kerberos http client
  */
+@Slf4j
 public class KerberosHttpClient {
-    public static final Logger logger = LoggerFactory.getLogger(KerberosHttpClient.class);
 
     private String principal;
     private String keyTabLocation;
@@ -75,6 +74,7 @@ public class KerberosHttpClient {
         HttpClientBuilder builder = HttpUtils.getHttpClientBuilder();
         BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(new AuthScope(null, -1, null), new Credentials() {
+
             @Override
             public Principal getUserPrincipal() {
                 return null;
@@ -90,8 +90,9 @@ public class KerberosHttpClient {
     }
 
     public String get(final String url, final String userId) {
-        logger.info("Calling KerberosHttpClient {} {} {}", this.principal, this.keyTabLocation, url);
+        log.info("Calling KerberosHttpClient {} {} {}", this.principal, this.keyTabLocation, url);
         Configuration config = new Configuration() {
+
             @SuppressWarnings("serial")
             @Override
             public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
@@ -105,9 +106,9 @@ public class KerberosHttpClient {
                 options.put("doNotPrompt", "true");
                 options.put("isInitiator", "true");
                 options.put("debug", "true");
-                return new AppConfigurationEntry[] {
-                    new AppConfigurationEntry("com.sun.security.auth.module.Krb5LoginModule",
-                        AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options)};
+                return new AppConfigurationEntry[]{
+                        new AppConfigurationEntry("com.sun.security.auth.module.Krb5LoginModule",
+                                AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options)};
             }
         };
         Set<Principal> princ = new HashSet<>(1);
@@ -125,7 +126,7 @@ public class KerberosHttpClient {
                 return HttpUtils.getResponseContentString(httpget, httpClient);
             });
         } catch (LoginException le) {
-            logger.error("Kerberos authentication failed ", le);
+            log.error("Kerberos authentication failed ", le);
         }
         return null;
     }
@@ -140,9 +141,9 @@ public class KerberosHttpClient {
 
         String responseContent;
         KerberosHttpClient kerberosHttpClient = new KerberosHttpClient(
-            PropertyUtils.getString(Constants.LOGIN_USER_KEY_TAB_USERNAME),
-            PropertyUtils.getString(Constants.LOGIN_USER_KEY_TAB_PATH),
-            PropertyUtils.getString(Constants.JAVA_SECURITY_KRB5_CONF_PATH), true);
+                PropertyUtils.getString(Constants.LOGIN_USER_KEY_TAB_USERNAME),
+                PropertyUtils.getString(Constants.LOGIN_USER_KEY_TAB_PATH),
+                PropertyUtils.getString(Constants.JAVA_SECURITY_KRB5_CONF_PATH), true);
         responseContent = kerberosHttpClient.get(url, PropertyUtils.getString(Constants.LOGIN_USER_KEY_TAB_USERNAME));
         return responseContent;
 

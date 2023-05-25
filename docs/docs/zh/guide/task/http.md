@@ -12,7 +12,10 @@
 
 ## 任务参数
 
-- 默认参数说明请参考[DolphinScheduler任务参数附录](appendix.md#默认任务参数)。
+[//]: # (TODO: use the commented anchor below once our website template supports this syntax)
+[//]: # (- 默认参数说明请参考[DolphinScheduler任务参数附录]&#40;appendix.md#默认任务参数&#41;`默认任务参数`一栏。)
+
+- 默认参数说明请参考[DolphinScheduler任务参数附录](appendix.md)`默认任务参数`一栏。
 
 | **任务参数** |               **描述**                |
 |----------|-------------------------------------|
@@ -22,6 +25,16 @@
 | 校验条件     | 支持默认响应码、自定义响应码、内容包含、内容不包含           |
 | 校验内容     | 当校验条件选择自定义响应码、内容包含、内容不包含时，需填写校验内容   |
 | 自定义参数    | 是 http 局部的用户自定义参数，会替换脚本中以 ${变量} 的内容 |
+
+## 任务输出参数
+
+| **任务参数** |       **描述**        |
+|----------|---------------------|
+| response | VARCHAR, http请求返回结果 |
+
+可以在下游任务中使用 ${taskName.response} 引用任务输出参数。
+
+如，当前task1为http任务, 下游任务可以使用 `${task1.response}` 引用task1的输出参数
 
 ## 任务样例
 

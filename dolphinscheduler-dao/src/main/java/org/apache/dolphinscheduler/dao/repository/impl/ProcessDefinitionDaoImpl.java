@@ -18,9 +18,22 @@
 package org.apache.dolphinscheduler.dao.repository.impl;
 
 import org.apache.dolphinscheduler.dao.entity.ProcessDefinition;
+import org.apache.dolphinscheduler.dao.entity.ProcessDefinitionLog;
+import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
+import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionLogMapper;
 import org.apache.dolphinscheduler.dao.mapper.ProcessDefinitionMapper;
 import org.apache.dolphinscheduler.dao.model.PageListingResult;
 import org.apache.dolphinscheduler.dao.repository.ProcessDefinitionDao;
+
+import org.apache.commons.collections4.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -33,6 +46,8 @@ public class ProcessDefinitionDaoImpl implements ProcessDefinitionDao {
 
     @Autowired
     private ProcessDefinitionMapper processDefinitionMapper;
+    @Autowired
+    private ProcessDefinitionLogMapper processDefinitionLogMapper;
 
     @Override
     public PageListingResult<ProcessDefinition> listingProcessDefinition(int pageNumber, int pageSize, String searchVal,
@@ -47,5 +62,50 @@ public class ProcessDefinitionDaoImpl implements ProcessDefinitionDao {
                 .pageSize(pageSize)
                 .records(processDefinitions.getRecords())
                 .build();
+    }
+
+    @Override
+    public List<ProcessDefinition> queryProcessDefinitionsByCodesAndVersions(List<ProcessInstance> processInstances) {
+        if (Objects.isNull(processInstances) || processInstances.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<ProcessDefinitionLog> processDefinitionLogs = processInstances
+                .parallelStream()
+                .map(processInstance -> {
+                    ProcessDefinitionLog processDefinitionLog = processDefinitionLogMapper
+                            .queryByDefinitionCodeAndVersion(processInstance.getProcessDefinitionCode(),
+                                    processInstance.getProcessDefinitionVersion());
+                    return processDefinitionLog;
+                })
+                .collect(Collectors.toList());
+
+        List<ProcessDefinition> processDefinitions =
+                processDefinitionLogs.stream().map(log -> (ProcessDefinition) log).collect(Collectors.toList());
+
+        return processDefinitions;
+    }
+
+    @Override
+    public Optional<ProcessDefinition> queryByCode(long code) {
+        return Optional.ofNullable(
+                processDefinitionMapper.queryByCode(code));
+    }
+
+    @Override
+    public void deleteById(Integer workflowDefinitionId) {
+        processDefinitionMapper.deleteById(workflowDefinitionId);
+    }
+
+    @Override
+    public void deleteByWorkflowDefinitionCode(long workflowDefinitionCode) {
+        processDefinitionMapper.deleteByCode(workflowDefinitionCode);
+    }
+
+    @Override
+    public List<ProcessDefinition> queryByCodes(Collection<Long> processDefinitionCodes) {
+        if (CollectionUtils.isEmpty(processDefinitionCodes)) {
+            return Collections.emptyList();
+        }
+        return processDefinitionMapper.queryByCodes(processDefinitionCodes);
     }
 }

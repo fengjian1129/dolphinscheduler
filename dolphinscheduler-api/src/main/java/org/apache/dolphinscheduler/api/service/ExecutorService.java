@@ -17,6 +17,7 @@
 
 package org.apache.dolphinscheduler.api.service;
 
+import org.apache.dolphinscheduler.api.dto.workflowInstance.WorkflowExecuteResponse;
 import org.apache.dolphinscheduler.api.enums.ExecuteType;
 import org.apache.dolphinscheduler.common.enums.CommandType;
 import org.apache.dolphinscheduler.common.enums.ComplementDependentMode;
@@ -51,6 +52,7 @@ public interface ExecutorService {
      * @param warningGroupId notify group id
      * @param processInstancePriority process instance priority
      * @param workerGroup worker group name
+     * @param tenantCode tenant code
      * @param environmentCode environment code
      * @param runMode run mode
      * @param timeout timeout
@@ -61,13 +63,16 @@ public interface ExecutorService {
     Map<String, Object> execProcessInstance(User loginUser, long projectCode,
                                             long processDefinitionCode, String cronTime, CommandType commandType,
                                             FailureStrategy failureStrategy, String startNodeList,
-                                            TaskDependType taskDependType, WarningType warningType, Integer warningGroupId,
+                                            TaskDependType taskDependType, WarningType warningType,
+                                            Integer warningGroupId,
                                             RunMode runMode,
-                                            Priority processInstancePriority, String workerGroup, Long environmentCode,
+                                            Priority processInstancePriority, String workerGroup, String tenantCode,
+                                            Long environmentCode,
                                             Integer timeout,
                                             Map<String, String> startParams, Integer expectedParallelismNumber,
                                             int dryRun, int testFlag,
-                                            ComplementDependentMode complementDependentMode);
+                                            ComplementDependentMode complementDependentMode, Integer version,
+                                            boolean allLevelDependent);
 
     /**
      * check whether the process definition can be executed
@@ -90,6 +95,30 @@ public interface ExecutorService {
      * @return execute result code
      */
     Map<String, Object> execute(User loginUser, long projectCode, Integer processInstanceId, ExecuteType executeType);
+
+    /**
+     * do action to execute task in process instance
+     *
+     * @param loginUser login user
+     * @param projectCode project code
+     * @param processInstanceId process instance id
+     * @param startNodeList start node list
+     * @param taskDependType task depend type
+     * @return execute result code
+     */
+    WorkflowExecuteResponse executeTask(User loginUser, long projectCode, Integer processInstanceId,
+                                        String startNodeList,
+                                        TaskDependType taskDependType);
+
+    /**
+     * do action to process instance：pause, stop, repeat, recover from pause, recover from stop
+     *
+     * @param loginUser login user
+     * @param workflowInstanceId workflow instance id
+     * @param executeType execute type
+     * @return execute result code
+     */
+    Map<String, Object> execute(User loginUser, Integer workflowInstanceId, ExecuteType executeType);
 
     /**
      * check if sub processes are offline before starting process definition
@@ -128,6 +157,7 @@ public interface ExecutorService {
      * @param projectCode project code
      * @param warningGroupId notify group id
      * @param workerGroup worker group name
+     * @param tenantCode tenant code
      * @param environmentCode environment code
      * @param startParams the global param values which pass to new process instance
      * @return execute process instance code
@@ -135,7 +165,9 @@ public interface ExecutorService {
     Map<String, Object> execStreamTaskInstance(User loginUser, long projectCode,
                                                long taskDefinitionCode, int taskDefinitionVersion,
                                                int warningGroupId,
-                                               String workerGroup, Long environmentCode,
+                                               String workerGroup,
+                                               String tenantCode,
+                                               Long environmentCode,
                                                Map<String, String> startParams,
                                                int dryRun);
 }

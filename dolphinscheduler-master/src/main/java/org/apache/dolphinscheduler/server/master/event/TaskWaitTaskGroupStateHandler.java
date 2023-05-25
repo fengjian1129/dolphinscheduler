@@ -20,17 +20,28 @@ package org.apache.dolphinscheduler.server.master.event;
 import org.apache.dolphinscheduler.common.enums.StateEventType;
 import org.apache.dolphinscheduler.server.master.runner.WorkflowExecuteRunnable;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.google.auto.service.AutoService;
 
 @AutoService(StateEventHandler.class)
+@Slf4j
 public class TaskWaitTaskGroupStateHandler implements StateEventHandler {
+
     @Override
-    public boolean handleStateEvent(WorkflowExecuteRunnable workflowExecuteRunnable, StateEvent stateEvent) {
-        return workflowExecuteRunnable.checkForceStartAndWakeUp(stateEvent);
+    public boolean handleStateEvent(WorkflowExecuteRunnable workflowExecuteRunnable,
+                                    StateEvent stateEvent) {
+        log.info("Handle task instance wait task group event, taskInstanceId: {}", stateEvent.getTaskInstanceId());
+        if (workflowExecuteRunnable.checkForceStartAndWakeUp(stateEvent)) {
+            log.info("Success wake up task instance, taskInstanceId: {}", stateEvent.getTaskInstanceId());
+        } else {
+            log.info("Failed to wake up task instance, taskInstanceId: {}", stateEvent.getTaskInstanceId());
+        }
+        return true;
     }
 
     @Override
     public StateEventType getEventType() {
-        return StateEventType.WAIT_TASK_GROUP;
+        return StateEventType.WAKE_UP_TASK_GROUP;
     }
 }

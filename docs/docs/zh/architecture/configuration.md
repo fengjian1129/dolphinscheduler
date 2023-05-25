@@ -181,7 +181,7 @@ DolphinScheduler同样可以通过`bin/env/dolphinscheduler_env.sh`进行Zookeep
 
 ## common.properties [hadoop、s3、yarn配置]
 
-common.properties配置文件目前主要是配置hadoop/s3/yarn相关的配置，配置文件位置：
+common.properties配置文件目前主要是配置hadoop/s3/yarn/applicationId收集相关的配置，配置文件位置：
 |服务名称| 配置文件 |
 |--|--|
 |Master Server | `master-server/conf/common.properties`|
@@ -194,7 +194,7 @@ common.properties配置文件目前主要是配置hadoop/s3/yarn相关的配置�
 | 参数 | 默认值 | 描述 |
 |--|--|--|
 |data.basedir.path | /tmp/dolphinscheduler | 本地工作目录,用于存放临时文件|
-|resource.storage.type | NONE | 资源文件存储类型: HDFS,S3,NONE|
+|resource.storage.type | NONE | 资源文件存储类型: HDFS,S3,OSS,GCS,NONE|
 |resource.upload.path | /dolphinscheduler | 资源文件存储路径|
 |aws.access.key.id | minioadmin | S3 access key|
 |aws.secret.access.key | minioadmin | S3 secret access key|
@@ -221,6 +221,7 @@ common.properties配置文件目前主要是配置hadoop/s3/yarn相关的配置�
 |sudo.enable | true | 是否开启sudo|
 |alert.rpc.port | 50052 | Alert Server的RPC端口|
 |zeppelin.rest.url | http://localhost:8080 | zeppelin RESTful API 接口地址|
+|appId.collect | log | 收集applicationId方式， 如果用aop方法，将配置log替换为aop，并将`bin/env/dolphinscheduler_env.sh`自动收集applicationId相关环境变量配置的注释取消掉，注意：aop不支持远程主机提交yarn作业的方式比如Beeline客户端提交，且如果用户环境覆盖了dolphinscheduler_env.sh收集applicationId相关环境变量配置，aop方法会失效|
 
 ## Api-server相关配置
 
@@ -243,8 +244,9 @@ common.properties配置文件目前主要是配置hadoop/s3/yarn相关的配置�
 |security.authentication.ldap.base.dn|dc=example,dc=com|LDAP base dn|
 |security.authentication.ldap.username|cn=read-only-admin,dc=example,dc=com|LDAP账号|
 |security.authentication.ldap.password|password|LDAP密码|
-|security.authentication.ldap.user.identity.attribute|uid|LDAP用户身份标识字段名|
-|security.authentication.ldap.user.email.attribute|mail|LDAP邮箱字段名|
+|security.authentication.ldap.user.identity-attribute|uid|LDAP用户身份标识字段名|
+|security.authentication.ldap.user.email-attribute|mail|LDAP邮箱字段名|
+|security.authentication.ldap.user.not-exist-action|CREATE|当通过LDAP登陆时用户不存在的操作，默认值是: CREATE，可选值:CREATE、DENY|
 |traffic.control.global.switch|false|流量控制全局开关|
 |traffic.control.max-global-qps-rate|300|全局最大请求数/秒|
 |traffic.control.tenant-switch|false|流量控制租户开关|
@@ -266,12 +268,13 @@ common.properties配置文件目前主要是配置hadoop/s3/yarn相关的配置�
 |master.task-commit-retry-times|5|任务重试次数|
 |master.task-commit-interval|1000|任务提交间隔,单位为毫秒|
 |master.state-wheel-interval|5|轮询检查状态时间|
-|master.max-cpu-load-avg|-1|master最大cpuload均值,只有高于系统cpuload均值时,master服务才能调度任务. 默认值为-1: cpu cores * 2|
-|master.reserved-memory|0.3|master预留内存,只有低于系统可用内存时,master服务才能调度任务,单位为G|
+|master.max-cpu-load-avg|1|master最大cpuload均值,只有高于系统cpuload均值时,master服务才能调度任务. 默认值为1: 会使用100%的CPU|
+|master.reserved-memory|0.3|master预留内存,只有低于系统可用内存时,master服务才能调度任务. 默认值为0.3：当系统内存低于30%时会停止调度新的工作流|
 |master.failover-interval|10|failover间隔，单位为分钟|
-|master.kill-yarn-job-when-task-failover|true|当任务实例failover时，是否kill掉yarn job|
+|master.kill-application-when-task-failover|true|当任务实例failover时，是否kill掉yarn或k8s application|
 |master.registry-disconnect-strategy.strategy|stop|当Master与注册中心失联之后采取的策略, 默认值是: stop. 可选值包括： stop, waiting|
 |master.registry-disconnect-strategy.max-waiting-time|100s|当Master与注册中心失联之后重连时间, 之后当strategy为waiting时，该值生效。 该值表示当Master与注册中心失联时会在给定时间之内进行重连, 在给定时间之内重连失败将会停止自己，在重连时，Master会丢弃目前正在执行的工作流，值为0表示会无限期等待 |
+|master.master.worker-group-refresh-interval|10s|定期将workerGroup从数据库中同步到内存的时间间隔|
 
 ## Worker Server相关配置
 
@@ -283,12 +286,13 @@ common.properties配置文件目前主要是配置hadoop/s3/yarn相关的配置�
 |worker.heartbeat-interval|10|worker心跳间隔,单位为秒|
 |worker.host-weight|100|派发任务时，worker主机的权重|
 |worker.tenant-auto-create|true|租户对应于系统的用户,由worker提交作业.如果系统没有该用户,则在参数worker.tenant.auto.create为true后自动创建。|
-|worker.max-cpu-load-avg|-1|worker最大cpuload均值,只有高于系统cpuload均值时,worker服务才能被派发任务. 默认值为-1: cpu cores * 2|
-|worker.reserved-memory|0.3|worker预留内存,只有低于系统可用内存时,worker服务才能被派发任务,单位为G|
+|worker.max-cpu-load-avg|1|worker最大cpuload均值,只有高于系统cpuload均值时,worker服务才能被派发任务. 默认值为1: 会使用100%的CPU|
+|worker.reserved-memory|0.3|worker预留内存,只有低于系统可用内存时,worker服务才能被派发任务. 默认值为0.3：当系统内存低于30%时会停止调度新的工作流|
 |worker.alert-listen-host|localhost|alert监听host|
 |worker.alert-listen-port|50052|alert监听端口|
 |worker.registry-disconnect-strategy.strategy|stop|当Worker与注册中心失联之后采取的策略, 默认值是: stop. 可选值包括： stop, waiting|
 |worker.registry-disconnect-strategy.max-waiting-time|100s|当Worker与注册中心失联之后重连时间, 之后当strategy为waiting时，该值生效。 该值表示当Worker与注册中心失联时会在给定时间之内进行重连, 在给定时间之内重连失败将会停止自己，在重连时，Worker会丢弃kill正在执行的任务。值为0表示会无限期等待 |
+|worker.task-execute-threads-full-policy|REJECT|如果是 REJECT, 当Worker中等待队列中的任务数达到exec-threads时, Worker将会拒绝接下来新接收的任务，Master将会重新分发该任务; 如果是 CONTINUE, Worker将会接收任务，放入等待队列中等待空闲线程去执行该任务|
 
 ## Alert Server相关配置
 
@@ -309,23 +313,35 @@ common.properties配置文件目前主要是配置hadoop/s3/yarn相关的配置�
 
 默认配置如下：
 
-| 参数 | 默认值 |
-|--|--|
-|spring.quartz.properties.org.quartz.threadPool.threadPriority | 5|
-|spring.quartz.properties.org.quartz.jobStore.isClustered | true|
-|spring.quartz.properties.org.quartz.jobStore.class | org.quartz.impl.jdbcjobstore.JobStoreTX|
-|spring.quartz.properties.org.quartz.scheduler.instanceId | AUTO|
-|spring.quartz.properties.org.quartz.jobStore.tablePrefix | QRTZ_|
-|spring.quartz.properties.org.quartz.jobStore.acquireTriggersWithinLock|true|
-|spring.quartz.properties.org.quartz.scheduler.instanceName | DolphinScheduler|
-|spring.quartz.properties.org.quartz.threadPool.class | org.quartz.simpl.SimpleThreadPool|
-|spring.quartz.properties.org.quartz.jobStore.useProperties | false|
-|spring.quartz.properties.org.quartz.threadPool.makeThreadsDaemons | true|
-|spring.quartz.properties.org.quartz.threadPool.threadCount | 25|
-|spring.quartz.properties.org.quartz.jobStore.misfireThreshold | 60000|
-|spring.quartz.properties.org.quartz.scheduler.makeSchedulerThreadDaemon | true|
-|spring.quartz.properties.org.quartz.jobStore.driverDelegateClass | org.quartz.impl.jdbcjobstore.PostgreSQLDelegate|
-|spring.quartz.properties.org.quartz.jobStore.clusterCheckinInterval | 5000|
+|                                   参数                                    |                       默认值                       |
+|-------------------------------------------------------------------------|-------------------------------------------------|
+| spring.quartz.properties.org.quartz.jobStore.isClustered                | true                                            |
+| spring.quartz.properties.org.quartz.jobStore.class                      | org.quartz.impl.jdbcjobstore.JobStoreTX         |
+| spring.quartz.properties.org.quartz.scheduler.instanceId                | AUTO                                            |
+| spring.quartz.properties.org.quartz.jobStore.tablePrefix                | QRTZ_                                           |
+| spring.quartz.properties.org.quartz.jobStore.acquireTriggersWithinLock  | true                                            |
+| spring.quartz.properties.org.quartz.scheduler.instanceName              | DolphinScheduler                                |
+| spring.quartz.properties.org.quartz.jobStore.useProperties              | false                                           |
+| spring.quartz.properties.org.quartz.jobStore.misfireThreshold           | 60000                                           |
+| spring.quartz.properties.org.quartz.scheduler.makeSchedulerThreadDaemon | true                                            |
+| spring.quartz.properties.org.quartz.jobStore.driverDelegateClass        | org.quartz.impl.jdbcjobstore.PostgreSQLDelegate |
+| spring.quartz.properties.org.quartz.jobStore.clusterCheckinInterval     | 5000                                            |
+
+上述配置项在*Master Server* 和 *Api Server*是相同的，但他们的Quartz线程池配置部分却是不一样的。
+*Master Server* 的Quartz线程池默认配置如下：
+
+|                            Parameters                             |           Default value           |
+|-------------------------------------------------------------------|-----------------------------------|
+| spring.quartz.properties.org.quartz.threadPool.makeThreadsDaemons | true                              |
+| spring.quartz.properties.org.quartz.threadPool.threadCount        | 25                                |
+| spring.quartz.properties.org.quartz.threadPool.threadPriority     | 5                                 |
+| spring.quartz.properties.org.quartz.threadPool.class              | org.quartz.simpl.SimpleThreadPool |
+
+因为*Api Server*不会启动*Quartz Scheduler*实例，只会作为Scheduler客户端使用，因此它的Quartz线程池将会使用`QuartzZeroSizeThreadPool`。`QuartzZeroSizeThreadPool`不会启动任何线程。具体的默认配置如下：
+
+|                      Parameters                      |                             Default value                             |
+|------------------------------------------------------|-----------------------------------------------------------------------|
+| spring.quartz.properties.org.quartz.threadPool.class | org.apache.dolphinscheduler.scheduler.quartz.QuartzZeroSizeThreadPool |
 
 ## dolphinscheduler_env.sh [环境变量配置]
 
@@ -345,6 +361,13 @@ export FLINK_HOME=${FLINK_HOME:-/opt/soft/flink}
 export DATAX_HOME=${DATAX_HOME:-/opt/soft/datax}
 
 export PATH=$HADOOP_HOME/bin:$SPARK_HOME/bin:$PYTHON_HOME/bin:$JAVA_HOME/bin:$HIVE_HOME/bin:$FLINK_HOME/bin:$DATAX_HOME/bin:$PATH
+
+# applicationId auto collection related configuration, the following configurations are unnecessary if setting appId.collect=log
+export HADOOP_CLASSPATH=`hadoop classpath`:${DOLPHINSCHEDULER_HOME}/tools/libs/*
+export SPARK_DIST_CLASSPATH=$HADOOP_CLASSPATH:$SPARK_DIST_CLASS_PATH
+export HADOOP_CLIENT_OPTS="-javaagent:${DOLPHINSCHEDULER_HOME}/tools/libs/aspectjweaver-1.9.7.jar":$HADOOP_CLIENT_OPTS
+export SPARK_SUBMIT_OPTS="-javaagent:${DOLPHINSCHEDULER_HOME}/tools/libs/aspectjweaver-1.9.7.jar":$SPARK_SUBMIT_OPTS
+export FLINK_ENV_JAVA_OPTS="-javaagent:${DOLPHINSCHEDULER_HOME}/tools/libs/aspectjweaver-1.9.7.jar":$FLINK_ENV_JAVA_OPTS
 ```
 
 ## 日志相关配置

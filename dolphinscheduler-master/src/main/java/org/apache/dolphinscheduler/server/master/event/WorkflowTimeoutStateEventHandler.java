@@ -18,16 +18,24 @@
 package org.apache.dolphinscheduler.server.master.event;
 
 import org.apache.dolphinscheduler.common.enums.StateEventType;
+import org.apache.dolphinscheduler.dao.entity.ProcessInstance;
 import org.apache.dolphinscheduler.server.master.metrics.ProcessInstanceMetrics;
 import org.apache.dolphinscheduler.server.master.runner.WorkflowExecuteRunnable;
+
+import lombok.extern.slf4j.Slf4j;
 
 import com.google.auto.service.AutoService;
 
 @AutoService(StateEventHandler.class)
+@Slf4j
 public class WorkflowTimeoutStateEventHandler implements StateEventHandler {
+
     @Override
     public boolean handleStateEvent(WorkflowExecuteRunnable workflowExecuteRunnable, StateEvent stateEvent) {
-        ProcessInstanceMetrics.incProcessInstanceByState("timeout");
+        log.info("Handle workflow instance timeout event");
+        ProcessInstance processInstance = workflowExecuteRunnable.getProcessInstance();
+        ProcessInstanceMetrics.incProcessInstanceByStateAndProcessDefinitionCode("timeout",
+                processInstance.getProcessDefinitionCode().toString());
         workflowExecuteRunnable.processTimeout();
         return true;
     }

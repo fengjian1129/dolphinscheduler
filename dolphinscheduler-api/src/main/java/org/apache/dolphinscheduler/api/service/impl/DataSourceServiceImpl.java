@@ -26,7 +26,7 @@ import org.apache.dolphinscheduler.api.exceptions.ServiceException;
 import org.apache.dolphinscheduler.api.service.DataSourceService;
 import org.apache.dolphinscheduler.api.utils.PageInfo;
 import org.apache.dolphinscheduler.api.utils.Result;
-import org.apache.dolphinscheduler.common.Constants;
+import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.enums.AuthorizationType;
 import org.apache.dolphinscheduler.common.enums.UserType;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
@@ -35,15 +35,16 @@ import org.apache.dolphinscheduler.dao.entity.User;
 import org.apache.dolphinscheduler.dao.mapper.DataSourceMapper;
 import org.apache.dolphinscheduler.dao.mapper.DataSourceUserMapper;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSourceParamDTO;
+import org.apache.dolphinscheduler.plugin.datasource.api.datasource.DataSourceProcessor;
 import org.apache.dolphinscheduler.plugin.datasource.api.plugin.DataSourceClientProvider;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
 import org.apache.dolphinscheduler.spi.enums.DbType;
 import org.apache.dolphinscheduler.spi.params.base.ParamsOptions;
-import org.apache.dolphinscheduler.spi.utils.StringUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -60,8 +61,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
@@ -71,22 +72,18 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-
-
 /**
  * data source service impl
  */
 @Service
+@Slf4j
 public class DataSourceServiceImpl extends BaseServiceImpl implements DataSourceService {
-
-    private static final Logger logger = LoggerFactory.getLogger(DataSourceServiceImpl.class);
 
     @Autowired
     private DataSourceMapper dataSourceMapper;
 
     @Autowired
     private DataSourceUserMapper datasourceUserMapper;
-
 
     private static final String TABLE = "TABLE";
     private static final String VIEW = "VIEW";
@@ -106,28 +103,23 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
     public Result<Object> createDataSource(User loginUser, BaseDataSourceParamDTO datasourceParam) {
         DataSourceUtils.checkDatasourceParam(datasourceParam);
         Result<Object> result = new Result<>();
-        if (!canOperatorPermissions(loginUser,null, AuthorizationType.DATASOURCE, ApiFuncIdentificationConstant.DATASOURCE_CREATE_DATASOURCE)) {
+        if (!canOperatorPermissions(loginUser, null, AuthorizationType.DATASOURCE,
+                ApiFuncIdentificationConstant.DATASOURCE_CREATE_DATASOURCE)) {
             putMsg(result, Status.USER_NO_OPERATION_PERM);
             return result;
         }
         // check name can use or not
         if (checkName(datasourceParam.getName())) {
-            logger.warn("Datasource with the same name already exists, name:{}.", datasourceParam.getName());
+            log.warn("Datasource with the same name already exists, name:{}.", datasourceParam.getName());
             putMsg(result, Status.DATASOURCE_EXIST);
             return result;
         }
-        if(checkDescriptionLength(datasourceParam.getNote())){
-            logger.warn("Parameter description is too long, description:{}.", datasourceParam.getNote());
+        if (checkDescriptionLength(datasourceParam.getNote())) {
+            log.warn("Parameter description is too long, description:{}.", datasourceParam.getNote());
             putMsg(result, Status.DESCRIPTION_TOO_LONG_ERROR);
             return result;
         }
-        // check connect
         ConnectionParam connectionParam = DataSourceUtils.buildConnectionParams(datasourceParam);
-        Result<Object> isConnection = checkConnection(datasourceParam.getType(), connectionParam);
-        if (Status.SUCCESS.getCode() != isConnection.getCode()) {
-            putMsg(result, Status.DATASOURCE_CONNECT_FAILED);
-            return result;
-        }
 
         // build datasource
         DataSource dataSource = new DataSource();
@@ -146,10 +138,12 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         try {
             dataSourceMapper.insert(dataSource);
             putMsg(result, Status.SUCCESS);
-            permissionPostHandle(AuthorizationType.DATASOURCE, loginUser.getId(), Collections.singletonList(dataSource.getId()), logger);
-            logger.info("Datasource create complete, dbType:{}, datasourceName:{}.", dataSource.getType().getDescp(), dataSource.getName());
+            permissionPostHandle(AuthorizationType.DATASOURCE, loginUser.getId(),
+                    Collections.singletonList(dataSource.getId()), log);
+            log.info("Datasource create complete, dbType:{}, datasourceName:{}.", dataSource.getType().getDescp(),
+                    dataSource.getName());
         } catch (DuplicateKeyException ex) {
-            logger.error("Datasource create error.", ex);
+            log.error("Datasource create error.", ex);
             putMsg(result, Status.DATASOURCE_EXIST);
         }
 
@@ -170,39 +164,37 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         // determine whether the data source exists
         DataSource dataSource = dataSourceMapper.selectById(id);
         if (dataSource == null) {
-            logger.error("Datasource does not exist, id:{}.", id);
+            log.error("Datasource does not exist, id:{}.", id);
             putMsg(result, Status.RESOURCE_NOT_EXIST);
             return result;
         }
 
-        if (!canOperatorPermissions(loginUser,new Object[]{dataSource.getId()}, AuthorizationType.DATASOURCE, DATASOURCE_UPDATE)) {
+        if (!canOperatorPermissions(loginUser, new Object[]{dataSource.getId()}, AuthorizationType.DATASOURCE,
+                DATASOURCE_UPDATE)) {
             putMsg(result, Status.USER_NO_OPERATION_PERM);
             return result;
         }
 
-        //check name can use or not
-        if (!dataSource.getName().trim().equals(dataSource.getName()) && checkName(dataSource.getName())) {
-            logger.warn("Datasource with the same name already exists, name:{}.", dataSource.getName());
+        // check name can use or not
+        if (!dataSourceParam.getName().trim().equals(dataSource.getName()) && checkName(dataSourceParam.getName())) {
+            log.warn("Datasource with the same name already exists, name:{}.", dataSource.getName());
             putMsg(result, Status.DATASOURCE_EXIST);
             return result;
         }
-        if(checkDescriptionLength(dataSourceParam.getNote())){
-            logger.warn("Parameter description is too long, description:{}.", dataSourceParam.getNote());
+        if (checkDescriptionLength(dataSourceParam.getNote())) {
+            log.warn("Parameter description is too long, description:{}.", dataSourceParam.getNote());
             putMsg(result, Status.DESCRIPTION_TOO_LONG_ERROR);
             return result;
         }
-        //check password，if the password is not updated, set to the old password.
-        BaseConnectionParam connectionParam = (BaseConnectionParam) DataSourceUtils.buildConnectionParams(dataSourceParam);
+        // check password，if the password is not updated, set to the old password.
+        ConnectionParam connectionParam = DataSourceUtils.buildConnectionParams(dataSourceParam);
+
         String password = connectionParam.getPassword();
+
         if (StringUtils.isBlank(password)) {
             String oldConnectionParams = dataSource.getConnectionParams();
             ObjectNode oldParams = JSONUtils.parseObject(oldConnectionParams);
             connectionParam.setPassword(oldParams.path(Constants.PASSWORD).asText());
-        }
-
-        Result<Object> isConnection = checkConnection(dataSource.getType(), connectionParam);
-        if (isConnection.isFailed()) {
-            return isConnection;
         }
 
         Date now = new Date();
@@ -213,17 +205,19 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         dataSource.setType(dataSource.getType());
         dataSource.setConnectionParams(JSONUtils.toJsonString(connectionParam));
         dataSource.setUpdateTime(now);
-        if(dataSource.getTestFlag() == 1 && dataSourceParam.getTestFlag() == 0){
+        if (dataSource.getTestFlag() == 1 && dataSourceParam.getTestFlag() == 0) {
             clearBindTestId(id);
         }
         dataSource.setTestFlag(dataSourceParam.getTestFlag());
         dataSource.setBindTestId(dataSourceParam.getBindTestId());
         try {
             dataSourceMapper.updateById(dataSource);
-            logger.info("Update datasource complete, datasourceId:{}, datasourceName:{}.", dataSource.getId(), dataSource.getName());
+            log.info("Update datasource complete, datasourceId:{}, datasourceName:{}.", dataSource.getId(),
+                    dataSource.getName());
             putMsg(result, Status.SUCCESS);
         } catch (DuplicateKeyException ex) {
-            logger.error("Update datasource error, datasourceId:{}, datasourceName:{}.", dataSource.getId(), dataSource.getName());
+            log.error("Update datasource error, datasourceId:{}, datasourceName:{}.", dataSource.getId(),
+                    dataSource.getName());
             putMsg(result, Status.DATASOURCE_EXIST);
         }
         return result;
@@ -241,15 +235,22 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
      * @return data source detail
      */
     @Override
-    public Map<String, Object> queryDataSource(int id) {
+    public Map<String, Object> queryDataSource(int id, User loginUser) {
 
         Map<String, Object> result = new HashMap<>();
         DataSource dataSource = dataSourceMapper.selectById(id);
         if (dataSource == null) {
-            logger.error("Datasource does not exist, id:{}.", id);
+            log.error("Datasource does not exist, id:{}.", id);
             putMsg(result, Status.RESOURCE_NOT_EXIST);
             return result;
         }
+
+        if (!canOperatorPermissions(loginUser, new Object[]{dataSource.getId()}, AuthorizationType.DATASOURCE,
+                ApiFuncIdentificationConstant.DATASOURCE)) {
+            putMsg(result, Status.USER_NO_OPERATION_PERM);
+            return result;
+        }
+
         // type
         BaseDataSourceParamDTO baseDataSourceParamDTO = DataSourceUtils.buildDatasourceParamDTO(
                 dataSource.getType(), dataSource.getConnectionParams());
@@ -279,9 +280,10 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         Page<DataSource> dataSourcePage = new Page<>(pageNo, pageSize);
         PageInfo<DataSource> pageInfo = new PageInfo<>(pageNo, pageSize);
         if (loginUser.getUserType().equals(UserType.ADMIN_USER)) {
-            dataSourceList = dataSourceMapper.selectPaging(dataSourcePage, UserType.ADMIN_USER.equals(loginUser.getUserType()) ? 0 : loginUser.getId(), searchVal);
+            dataSourceList = dataSourceMapper.selectPaging(dataSourcePage, 0, searchVal);
         } else {
-            Set<Integer> ids = resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.DATASOURCE, loginUser.getId(), logger);
+            Set<Integer> ids = resourcePermissionCheckService
+                    .userOwnedResourceIdsAcquisition(AuthorizationType.DATASOURCE, loginUser.getId(), log);
             if (ids.isEmpty()) {
                 result.setData(pageInfo);
                 putMsg(result, Status.SUCCESS);
@@ -335,14 +337,16 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         if (loginUser.getUserType().equals(UserType.ADMIN_USER)) {
             datasourceList = dataSourceMapper.queryDataSourceByType(0, type, testFlag);
         } else {
-            Set<Integer> ids = resourcePermissionCheckService.userOwnedResourceIdsAcquisition(AuthorizationType.DATASOURCE, loginUser.getId(), logger);
+            Set<Integer> ids = resourcePermissionCheckService
+                    .userOwnedResourceIdsAcquisition(AuthorizationType.DATASOURCE, loginUser.getId(), log);
             if (ids.isEmpty()) {
                 result.put(Constants.DATA_LIST, Collections.emptyList());
                 putMsg(result, Status.SUCCESS);
                 return result;
             }
-            datasourceList = dataSourceMapper.selectBatchIds(ids).stream().filter(dataSource -> dataSource.getType().getCode() == type).filter(dataSource -> dataSource.getTestFlag() == testFlag).collect(Collectors.toList());
-
+            datasourceList = dataSourceMapper.selectBatchIds(ids).stream()
+                    .filter(dataSource -> dataSource.getType().getCode() == type)
+                    .filter(dataSource -> dataSource.getTestFlag() == testFlag).collect(Collectors.toList());
         }
         result.put(Constants.DATA_LIST, datasourceList);
         putMsg(result, Status.SUCCESS);
@@ -360,7 +364,8 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         Result<Object> result = new Result<>();
         List<DataSource> dataSourceList = dataSourceMapper.queryDataSourceByName(name);
         if (dataSourceList != null && !dataSourceList.isEmpty()) {
-            logger.warn("Datasource with the same name already exists, dataSourceName:{}.", dataSourceList.get(0).getName());
+            log.warn("Datasource with the same name already exists, dataSourceName:{}.",
+                    dataSourceList.get(0).getName());
             putMsg(result, Status.DATASOURCE_EXIST);
         } else {
             putMsg(result, Status.SUCCESS);
@@ -380,21 +385,33 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
     @Override
     public Result<Object> checkConnection(DbType type, ConnectionParam connectionParam) {
         Result<Object> result = new Result<>();
+        if (type == DbType.SSH) {
+            DataSourceProcessor sshDataSourceProcessor = DataSourceUtils.getDatasourceProcessor(type);
+            if (sshDataSourceProcessor.testConnection(connectionParam)) {
+                putMsg(result, Status.SUCCESS);
+            } else {
+                putMsg(result, Status.CONNECT_DATASOURCE_FAILURE);
+            }
+            return result;
+        }
         try (Connection connection = DataSourceClientProvider.getInstance().getConnection(type, connectionParam)) {
             if (connection == null) {
-                logger.error("Connection test to {} datasource failed, connectionParam:{}.", type.getDescp(), connectionParam);
+                log.error("Connection test to {} datasource failed, connectionParam:{}.", type.getDescp(),
+                        connectionParam);
                 putMsg(result, Status.CONNECTION_TEST_FAILURE);
                 return result;
             }
-            logger.info("Connection test to {} datasource success, connectionParam:{}", type.getDescp(), connectionParam);
+            log.info("Connection test to {} datasource success, connectionParam:{}", type.getDescp(),
+                    connectionParam);
             putMsg(result, Status.SUCCESS);
             return result;
         } catch (Exception e) {
             String message = Optional.of(e).map(Throwable::getCause)
                     .map(Throwable::getMessage)
                     .orElse(e.getMessage());
-            logger.error("Datasource test connection error, dbType:{}, connectionParam:{}, message:{}.", type, connectionParam, message);
-            return new Result<>(Status.CONNECTION_TEST_FAILURE.getCode(), message);
+            log.error("Datasource test connection error, dbType:{}, connectionParam:{}, message:{}.", type,
+                    connectionParam, message);
+            return new Result<>(Status.CONNECTION_TEST_FAILURE);
         }
     }
 
@@ -409,11 +426,12 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         DataSource dataSource = dataSourceMapper.selectById(id);
         if (dataSource == null) {
             Result<Object> result = new Result<>();
-            logger.error("Datasource does not exist, datasourceId:{}.", id);
+            log.error("Datasource does not exist, datasourceId:{}.", id);
             putMsg(result, Status.RESOURCE_NOT_EXIST);
             return result;
         }
-        return checkConnection(dataSource.getType(), DataSourceUtils.buildConnectionParams(dataSource.getType(), dataSource.getConnectionParams()));
+        return checkConnection(dataSource.getType(),
+                DataSourceUtils.buildConnectionParams(dataSource.getType(), dataSource.getConnectionParams()));
     }
 
     /**
@@ -428,24 +446,25 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
     public Result<Object> delete(User loginUser, int datasourceId) {
         Result<Object> result = new Result<>();
         try {
-            //query datasource by id
+            // query datasource by id
             DataSource dataSource = dataSourceMapper.selectById(datasourceId);
             if (dataSource == null) {
-                logger.warn("Datasource does not exist, datasourceId:{}.", datasourceId);
+                log.warn("Datasource does not exist, datasourceId:{}.", datasourceId);
                 putMsg(result, Status.RESOURCE_NOT_EXIST);
                 return result;
             }
-            if (!canOperatorPermissions(loginUser, new Object[]{dataSource.getId()},AuthorizationType.DATASOURCE,DATASOURCE_DELETE)) {
+            if (!canOperatorPermissions(loginUser, new Object[]{dataSource.getId()}, AuthorizationType.DATASOURCE,
+                    DATASOURCE_DELETE)) {
                 putMsg(result, Status.USER_NO_OPERATION_PERM);
                 return result;
             }
             dataSourceMapper.deleteById(datasourceId);
             datasourceUserMapper.deleteByDatasourceId(datasourceId);
             clearBindTestId(datasourceId);
-            logger.info("Delete datasource complete, datasourceId:{}.", datasourceId);
+            log.info("Delete datasource complete, datasourceId:{}.", datasourceId);
             putMsg(result, Status.SUCCESS);
         } catch (Exception e) {
-            logger.error("Delete datasource complete, datasourceId:{}.", datasourceId, e);
+            log.error("Delete datasource complete, datasourceId:{}.", datasourceId, e);
             throw new ServiceException(Status.DELETE_DATA_SOURCE_FAILURE);
         }
         return result;
@@ -462,7 +481,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
     public Map<String, Object> unauthDatasource(User loginUser, Integer userId) {
         Map<String, Object> result = new HashMap<>();
         List<DataSource> datasourceList;
-        if (canOperatorPermissions(loginUser,null,AuthorizationType.DATASOURCE,null)) {
+        if (canOperatorPermissions(loginUser, null, AuthorizationType.DATASOURCE, null)) {
             // admin gets all data sources except userId
             datasourceList = dataSourceMapper.queryDatasourceExceptUserId(userId);
         } else {
@@ -538,15 +557,15 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
             try {
                 schema = metaData.getConnection().getSchema();
             } catch (SQLException e) {
-                logger.error("Cant not get the schema, datasourceId:{}.", datasourceId, e);
+                log.error("Cant not get the schema, datasourceId:{}.", datasourceId, e);
             }
 
             tables = metaData.getTables(
                     connectionParam.getDatabase(),
-                    getDbSchemaPattern(dataSource.getType(),schema,connectionParam),
+                    getDbSchemaPattern(dataSource.getType(), schema, connectionParam),
                     "%", TABLE_TYPES);
             if (null == tables) {
-                logger.error("Get datasource tables error, datasourceId:{}.", datasourceId);
+                log.error("Get datasource tables error, datasourceId:{}.", datasourceId);
                 putMsg(result, Status.GET_DATASOURCE_TABLES_ERROR);
                 return result;
             }
@@ -558,7 +577,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
             }
 
         } catch (Exception e) {
-            logger.error("Get datasource tables error, datasourceId:{}.", datasourceId, e);
+            log.error("Get datasource tables error, datasourceId:{}.", datasourceId, e);
             putMsg(result, Status.GET_DATASOURCE_TABLES_ERROR);
             return result;
         } finally {
@@ -574,7 +593,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
     }
 
     @Override
-    public Map<String, Object> getTableColumns(Integer datasourceId,String tableName) {
+    public Map<String, Object> getTableColumns(Integer datasourceId, String tableName) {
         Map<String, Object> result = new HashMap<>();
 
         DataSource dataSource = dataSourceMapper.selectById(datasourceId);
@@ -613,7 +632,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
                 columnList.add(rs.getString(COLUMN_NAME));
             }
         } catch (Exception e) {
-            logger.error("Get datasource table columns error, datasourceId:{}.", dataSource.getId(), e);
+            log.error("Get datasource table columns error, datasourceId:{}.", dataSource.getId(), e);
         } finally {
             closeResult(rs);
             releaseConnection(connection);
@@ -640,7 +659,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         return options;
     }
 
-    private String getDbSchemaPattern(DbType dbType,String schema,BaseConnectionParam connectionParam) {
+    private String getDbSchemaPattern(DbType dbType, String schema, BaseConnectionParam connectionParam) {
         if (dbType == null) {
             return null;
         }
@@ -659,6 +678,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
                 schemaPattern = "dbo";
                 break;
             case CLICKHOUSE:
+            case DATABEND:
             case PRESTO:
                 if (!StringUtils.isEmpty(schema)) {
                     schemaPattern = schema;
@@ -675,7 +695,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
             try {
                 connection.close();
             } catch (Exception e) {
-                logger.error("Connection release error", e);
+                log.error("Connection release error", e);
             }
         }
     }
@@ -685,11 +705,11 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
             try {
                 rs.close();
             } catch (Exception e) {
-                logger.error("ResultSet close error", e);
+                log.error("ResultSet close error", e);
             }
         }
     }
-    private void clearBindTestId(Integer bindTestId){
+    private void clearBindTestId(Integer bindTestId) {
         dataSourceMapper.clearBindTestId(bindTestId);
     }
 
