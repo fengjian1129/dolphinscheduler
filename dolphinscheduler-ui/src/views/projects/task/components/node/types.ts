@@ -66,9 +66,15 @@ interface ILocalParam {
   value?: string
 }
 
-interface ICustomLabel {
+interface ILabel {
   label: string
   value: string
+}
+
+interface IMatchExpression {
+  key: string
+  operator: string
+  values: string
 }
 
 interface IResponseJsonItem extends Omit<IJsonItemParams, 'type'> {
@@ -217,6 +223,7 @@ interface ISparkParameters {
   executorMemory?: string
   numExecutors?: number
   others?: string
+  yarnQueue?: string
 }
 
 interface IRuleParameters {
@@ -364,9 +371,11 @@ interface ITaskParams {
   minCpuCores?: string
   minMemorySpace?: string
   image?: string
+  imagePullPolicy?: string
   command?: string
   args?: string
-  customizedLabels?: ICustomLabel[]
+  customizedLabels?: ILabel[]
+  nodeSelectors?: IMatchExpression[]
   algorithm?: string
   params?: string
   searchParams?: string
@@ -429,6 +438,11 @@ interface ITaskParams {
   factoryName?: string
   resourceGroupName?: string
   pipelineName?: string
+  maxNumOfSubWorkflowInstances?: number
+  degreeOfParallelism?: number
+  filterCondition?: string
+  listParameters?: Array<any>
+  yarnQueue?: string
 }
 
 interface INodeData

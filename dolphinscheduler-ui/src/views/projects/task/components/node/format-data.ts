@@ -32,7 +32,7 @@ export function formatParams(data: INodeData): {
   taskDefinitionJsonObj: object
 } {
   const taskParams: ITaskParams = {}
-  if (data.taskType === 'SUB_PROCESS') {
+  if (data.taskType === 'SUB_PROCESS' || data.taskType === 'DYNAMIC') {
     taskParams.processDefinitionCode = data.processDefinitionCode
   }
 
@@ -62,6 +62,7 @@ export function formatParams(data: INodeData): {
     if (data.namespace) {
       taskParams.namespace = data.namespace
     }
+    taskParams.yarnQueue = data.yarnQueue
   }
 
   if (data.taskType === 'SPARK') {
@@ -321,7 +322,8 @@ export function formatParams(data: INodeData): {
       executorCores: data.executorCores,
       executorMemory: data.executorMemory,
       numExecutors: data.numExecutors,
-      others: data.others
+      others: data.others,
+      yarnQueue: data.yarnQueue
     }
   }
 
@@ -347,9 +349,11 @@ export function formatParams(data: INodeData): {
     taskParams.minCpuCores = data.minCpuCores
     taskParams.minMemorySpace = data.minMemorySpace
     taskParams.image = data.image
+    taskParams.imagePullPolicy = data.imagePullPolicy
     taskParams.command = data.command
     taskParams.args = data.args
     taskParams.customizedLabels = data.customizedLabels
+    taskParams.nodeSelectors = data.nodeSelectors
   }
 
   if (data.taskType === 'JUPYTER') {
@@ -478,6 +482,14 @@ export function formatParams(data: INodeData): {
   if (data.taskType === 'REMOTESHELL') {
     taskParams.type = data.type
     taskParams.datasource = data.datasource
+  }
+
+  if (data.taskType === 'DYNAMIC') {
+    taskParams.processDefinitionCode = data.processDefinitionCode
+    taskParams.maxNumOfSubWorkflowInstances = data.maxNumOfSubWorkflowInstances
+    taskParams.degreeOfParallelism = data.degreeOfParallelism
+    taskParams.filterCondition = data.filterCondition
+    taskParams.listParameters = data.listParameters
   }
 
   let timeoutNotifyStrategy = ''
