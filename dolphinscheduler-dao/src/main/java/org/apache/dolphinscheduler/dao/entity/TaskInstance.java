@@ -17,7 +17,7 @@
 
 package org.apache.dolphinscheduler.dao.entity;
 
-import static org.apache.dolphinscheduler.common.constants.Constants.SEC_2_MINUTES_TIME_UNIT;
+import static org.apache.dolphinscheduler.common.constants.Constants.MINUTE_2_SECOND_TIME_UNIT;
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.TASK_TYPE_BLOCKING;
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.TASK_TYPE_CONDITIONS;
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.TASK_TYPE_DEPENDENT;
@@ -347,7 +347,8 @@ public class TaskInstance implements Serializable {
 
         return this.getState().isSuccess()
                 || this.getState().isKill()
-                || (this.getState().isFailure() && !taskCanRetry());
+                || (this.getState().isFailure() && !taskCanRetry())
+                || this.getState().isForceSuccess();
     }
 
     public boolean isSubProcess() {
@@ -409,7 +410,7 @@ public class TaskInstance implements Serializable {
         Date now = new Date();
         long failedTimeInterval = DateUtils.differSec(now, getEndTime());
         // task retry does not over time, return false
-        return getRetryInterval() * SEC_2_MINUTES_TIME_UNIT < failedTimeInterval;
+        return getRetryInterval() * MINUTE_2_SECOND_TIME_UNIT < failedTimeInterval;
     }
 
 }

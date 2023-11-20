@@ -17,6 +17,8 @@
 
 package org.apache.dolphinscheduler.common.model;
 
+import org.apache.dolphinscheduler.common.enums.ServerStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,8 +38,11 @@ public class WorkerHeartBeat implements HeartBeat {
     private double availablePhysicalMemorySize;
     private double reservedMemory;
     private double diskAvailable;
-    private int serverStatus;
+    private ServerStatus serverStatus;
     private int processId;
+
+    private String host;
+    private int port;
 
     private int workerHostWeight; // worker host weight
     private int workerWaitingTaskCount; // worker waiting task count

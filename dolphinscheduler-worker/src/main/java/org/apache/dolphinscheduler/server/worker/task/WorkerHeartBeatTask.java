@@ -17,11 +17,12 @@
 
 package org.apache.dolphinscheduler.server.worker.task;
 
-import org.apache.dolphinscheduler.common.constants.Constants;
+import org.apache.dolphinscheduler.common.enums.ServerStatus;
 import org.apache.dolphinscheduler.common.lifecycle.ServerLifeCycleManager;
 import org.apache.dolphinscheduler.common.model.BaseHeartBeatTask;
 import org.apache.dolphinscheduler.common.model.WorkerHeartBeat;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
+import org.apache.dolphinscheduler.common.utils.NetUtils;
 import org.apache.dolphinscheduler.common.utils.OSUtils;
 import org.apache.dolphinscheduler.registry.api.RegistryClient;
 import org.apache.dolphinscheduler.server.worker.config.WorkerConfig;
@@ -58,7 +59,7 @@ public class WorkerHeartBeatTask extends BaseHeartBeatTask<WorkerHeartBeat> {
         double reservedMemory = workerConfig.getReservedMemory();
         double memoryUsagePercentage = OSUtils.memoryUsagePercentage();
         int execThreads = workerConfig.getExecThreads();
-        int serverStatus =
+        ServerStatus serverStatus =
                 getServerStatus(cpuUsagePercentage, maxCpuUsePercentage, memoryUsagePercentage, reservedMemory,
                         execThreads, this.workerWaitingTaskCount.get());
 
@@ -75,6 +76,8 @@ public class WorkerHeartBeatTask extends BaseHeartBeatTask<WorkerHeartBeat> {
                 .workerWaitingTaskCount(this.workerWaitingTaskCount.get())
                 .workerExecThreadCount(workerConfig.getExecThreads())
                 .serverStatus(serverStatus)
+                .host(NetUtils.getHost())
+                .port(workerConfig.getListenPort())
                 .build();
     }
 
@@ -88,23 +91,23 @@ public class WorkerHeartBeatTask extends BaseHeartBeatTask<WorkerHeartBeat> {
                 workerRegistryPath, workerHeartBeatJson);
     }
 
-    public int getServerStatus(double cpuUsagePercentage,
-                               double maxCpuUsePercentage,
-                               double memoryUsagePercentage,
-                               double reservedMemory,
-                               int workerExecThreadCount,
-                               int workerWaitingTaskCount) {
+    private ServerStatus getServerStatus(double cpuUsagePercentage,
+                                         double maxCpuUsePercentage,
+                                         double memoryUsagePercentage,
+                                         double reservedMemory,
+                                         int workerExecThreadCount,
+                                         int workerWaitingTaskCount) {
         if (cpuUsagePercentage > maxCpuUsePercentage || (1 - memoryUsagePercentage) < reservedMemory) {
             log.warn(
                     "current cpu load average {} is higher than {} or available memory {} is lower than {}",
                     cpuUsagePercentage, maxCpuUsePercentage, 1 - memoryUsagePercentage, reservedMemory);
-            return Constants.ABNORMAL_NODE_STATUS;
+            return ServerStatus.ABNORMAL;
         } else if (workerWaitingTaskCount > workerExecThreadCount) {
             log.warn("current waiting task count {} is large than worker thread count {}, worker is busy",
                     workerWaitingTaskCount, workerExecThreadCount);
-            return Constants.BUSY_NODE_STATUE;
+            return ServerStatus.BUSY;
         } else {
-            return Constants.NORMAL_NODE_STATUS;
+            return ServerStatus.NORMAL;
         }
     }
 }

@@ -263,6 +263,12 @@ public enum Status {
     QUERY_TASK_INSTANCE_ERROR(10205, "query task instance error", "查询任务实例错误"),
     EXECUTE_NOT_DEFINE_TASK(10206, "please save and try again",
             "请先保存后再执行"),
+
+    DELETE_QUEUE_BY_ID_ERROR(10307, "delete queue by id error", "删除队列错误"),
+    DELETE_QUEUE_BY_ID_FAIL_USERS(10308, "delete queue by id fail, for there are {0} users using it",
+            "删除队列失败，有[{0}]个用户正在使用"),
+    DELETE_TENANT_BY_ID_FAIL_TENANTS(10309, "delete queue by id fail, for there are {0} tenants using it",
+            "删除队列失败，有[{0}]个租户正在使用"),
     START_NODE_NOT_EXIST_IN_LAST_PROCESS(10207, "this node {0} does not exist in the latest process definition",
             "该节点 {0} 不存在于最新的流程定义中"),
     LIST_AZURE_DATA_FACTORY_ERROR(10208, "list azure data factory error", "查询AZURE数据工厂列表错误"),
@@ -286,6 +292,11 @@ public enum Status {
     PROJECT_PARAMETER_NOT_EXISTS(10219, "project parameter {0} not exists", "项目参数[{0}]不存在"),
 
     PROJECT_PARAMETER_CODE_EMPTY(10220, "project parameter code empty", "项目参数code为空"),
+    CREATE_PROJECT_PREFERENCE_ERROR(10300, "create project preference error", "创建项目偏好设置错误"),
+
+    UPDATE_PROJECT_PREFERENCE_ERROR(10301, "update project preference error", "更新项目偏好设置错误"),
+    QUERY_PROJECT_PREFERENCE_ERROR(10302, "query project preference error", "查询项目偏好设置错误"),
+    UPDATE_PROJECT_PREFERENCE_STATE_ERROR(10303, "Failed to update the state of the project preference", "更新项目偏好设置错误"),
 
     UDF_FUNCTION_NOT_EXIST(20001, "UDF function not found", "UDF函数不存在"),
     UDF_FUNCTION_EXISTS(20002, "UDF function already exists", "UDF函数已存在"),
@@ -461,7 +472,10 @@ public enum Status {
             "failed to delete the alert instance, there is an alarm group associated with this alert instance",
             "删除告警实例失败，存在与此告警实例关联的警报组"),
     PROCESS_DEFINITION_VERSION_IS_USED(110013, "this process definition version is used", "此工作流定义版本被使用"),
-
+    ALERT_TEST_SENDING_FAILED(110014, "Alert test sending failed, [{0}]", "alert测试发送失败，[{0}]"),
+    ALERT_CHANNEL_NOT_EXIST(110015, "Alert channel not exist", "alert channel不存在"),
+    SEND_TEST_ALERT_PLUGIN_INSTANCE_ERROR(110016, "send test alert plugin instance error", "发送测试告警错误"),
+    ALERT_SERVER_NOT_EXIST(110017, "Alert server does not exist", "Alert server不存在"),
     CREATE_ENVIRONMENT_ERROR(120001, "create environment error", "创建环境失败"),
     ENVIRONMENT_NAME_EXISTS(120002, "this environment name [{0}] already exists", "环境名称[{0}]已经存在"),
     ENVIRONMENT_NAME_IS_NULL(120003, "this environment name shouldn't be empty.", "环境名称不能为空"),
@@ -482,6 +496,7 @@ public enum Status {
     GET_DATASOURCE_OPTIONS_ERROR(1200017, "get datasource options error", "获取数据源Options错误"),
     GET_DATASOURCE_TABLES_ERROR(1200018, "get datasource tables error", "获取数据源表列表错误"),
     GET_DATASOURCE_TABLE_COLUMNS_ERROR(1200019, "get datasource table columns error", "获取数据源表列名错误"),
+    GET_DATASOURCE_DATABASES_ERROR(1200035, "get datasource databases error", "获取数据库列表错误"),
 
     CREATE_CLUSTER_ERROR(120020, "create cluster error", "创建集群失败"),
     CLUSTER_NAME_EXISTS(120021, "this cluster name [{0}] already exists", "集群名称[{0}]已经存在"),
@@ -527,6 +542,7 @@ public enum Status {
     NOT_ALLOW_TO_DISABLE_OWN_ACCOUNT(130020, "Not allow to disable your own account", "不能停用自己的账号"),
     NOT_ALLOW_TO_DELETE_DEFAULT_ALARM_GROUP(130030, "Not allow to delete the default alarm group ", "不能删除默认告警组"),
     TIME_ZONE_ILLEGAL(130031, "time zone [{0}] is illegal", "时区参数 [{0}] 不合法"),
+    NOT_ALLOW_TO_UPDATE_GLOBAL_ALARM_GROUP(130032, "Not allow to update the global alert group ", "不能更新全局告警组"),
 
     QUERY_K8S_NAMESPACE_LIST_PAGING_ERROR(1300001, "login user query k8s namespace list paging error",
             "分页查询k8s名称空间列表错误"),
@@ -556,7 +572,20 @@ public enum Status {
     SCHEDULE_TIME_NUMBER_EXCEED(1400003, "The number of complement dates exceed 100.", "补数日期个数超过100"),
     DESCRIPTION_TOO_LONG_ERROR(1400004, "description is too long error", "描述过长"),
     DELETE_WORKER_GROUP_BY_ID_FAIL_ENV(1400005,
-            "delete worker group fail, for there are [{0}] enviroments using:{1}", "删除工作组失败，有 [{0}] 个环境正在使用：{1}");
+            "delete worker group fail, for there are [{0}] enviroments using:{1}", "删除工作组失败，有 [{0}] 个环境正在使用：{1}"),
+
+    WORKER_GROUP_DEPENDENT_TASK_EXISTS(1401000,
+            "You can not modify or remove this worker group, cause it has [{0}] dependent tasks like :{1}",
+            "不能修改或删除该Worker组，有 [{0}] 个任务正在使用：{1}"),
+
+    WORKER_GROUP_DEPENDENT_SCHEDULER_EXISTS(1401001,
+            "You can not modify or remove this worker group, cause it has [{0}] dependent workflow timings like :{1}",
+            "不能修改或删除该Worker组，有 [{0}] 个工作流定时正在使用：{1}"),
+
+    WORKER_GROUP_DEPENDENT_ENVIRONMENT_EXISTS(1401002,
+            "You can not modify or remove this worker group, cause it has [{0}] dependent environments.",
+            "不能修改或删除该Worker组，有 [{0}] 个环境配置正在使用"),
+            ;
     private final int code;
     private final String enMsg;
     private final String zhMsg;

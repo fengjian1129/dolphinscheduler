@@ -130,9 +130,8 @@ public class StateWheelExecuteThread extends BaseDaemonThread {
             return;
         }
         for (Integer processInstanceId : processInstanceTimeoutCheckList) {
-            try (
-                    LogUtils.MDCAutoClosableContext mdcAutoClosableContext =
-                            LogUtils.setWorkflowInstanceIdMDC(processInstanceId)) {
+            try {
+                LogUtils.setWorkflowInstanceIdMDC(processInstanceId);
                 WorkflowExecuteRunnable workflowExecuteThread = processInstanceExecCacheManager.getByProcessInstanceId(
                         processInstanceId);
                 if (workflowExecuteThread == null) {
@@ -141,14 +140,15 @@ public class StateWheelExecuteThread extends BaseDaemonThread {
                     processInstanceTimeoutCheckList.remove(processInstanceId);
                     continue;
                 }
-                ProcessInstance processInstance = workflowExecuteThread.getProcessInstance();
+                ProcessInstance processInstance =
+                        workflowExecuteThread.getWorkflowExecuteContext().getWorkflowInstance();
                 if (processInstance == null) {
                     log.warn("Check workflow timeout failed, the workflowInstance is null");
                     continue;
                 }
                 long timeRemain = DateUtils.getRemainTime(processInstance.getStartTime(),
                         (long) processInstance.getTimeout()
-                                * Constants.SEC_2_MINUTES_TIME_UNIT);
+                                * Constants.MINUTE_2_SECOND_TIME_UNIT);
                 if (timeRemain < 0) {
                     log.info("Workflow instance {} timeout, adding timeout event", processInstance.getId());
                     addProcessTimeoutEvent(processInstance);
@@ -157,6 +157,8 @@ public class StateWheelExecuteThread extends BaseDaemonThread {
                 }
             } catch (Exception ex) {
                 log.error("Check workflow instance timeout error");
+            } finally {
+                LogUtils.removeWorkflowInstanceIdMDC();
             }
         }
     }
@@ -219,9 +221,8 @@ public class StateWheelExecuteThread extends BaseDaemonThread {
             return;
         }
         for (TaskInstanceKey taskInstanceKey : taskInstanceTimeoutCheckList) {
-            try (
-                    LogUtils.MDCAutoClosableContext mdcAutoClosableContext =
-                            LogUtils.setWorkflowInstanceIdMDC(taskInstanceKey.getProcessInstanceId())) {
+            try {
+                LogUtils.setWorkflowInstanceIdMDC(taskInstanceKey.getProcessInstanceId());
                 int processInstanceId = taskInstanceKey.getProcessInstanceId();
                 long taskCode = taskInstanceKey.getTaskCode();
 
@@ -247,7 +248,7 @@ public class StateWheelExecuteThread extends BaseDaemonThread {
                 if (TimeoutFlag.OPEN == taskInstance.getTaskDefine().getTimeoutFlag()) {
                     long timeRemain = DateUtils.getRemainTime(taskInstance.getStartTime(),
                             (long) taskInstance.getTaskDefine().getTimeout()
-                                    * Constants.SEC_2_MINUTES_TIME_UNIT);
+                                    * Constants.MINUTE_2_SECOND_TIME_UNIT);
                     if (timeRemain < 0) {
                         log.info("Task instance is timeout, adding task timeout event and remove the check");
                         addTaskTimeoutEvent(taskInstance);
@@ -256,6 +257,8 @@ public class StateWheelExecuteThread extends BaseDaemonThread {
                 }
             } catch (Exception ex) {
                 log.error("Check task timeout error, taskInstanceKey: {}", taskInstanceKey, ex);
+            } finally {
+                LogUtils.removeWorkflowInstanceIdMDC();
             }
         }
     }
@@ -284,7 +287,8 @@ public class StateWheelExecuteThread extends BaseDaemonThread {
 
                 Optional<TaskInstance> taskInstanceOptional =
                         workflowExecuteThread.getRetryTaskInstanceByTaskCode(taskCode);
-                ProcessInstance processInstance = workflowExecuteThread.getProcessInstance();
+                ProcessInstance processInstance =
+                        workflowExecuteThread.getWorkflowExecuteContext().getWorkflowInstance();
 
                 if (processInstance.getState().isReadyStop()) {
                     log.warn(

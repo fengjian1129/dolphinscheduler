@@ -32,6 +32,8 @@ import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.service.AlertPluginInstanceService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
+import org.apache.dolphinscheduler.common.enums.AlertPluginInstanceType;
+import org.apache.dolphinscheduler.common.enums.WarningType;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.User;
 
@@ -52,6 +54,8 @@ public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
     private static final int pluginDefineId = 1;
     private static final String instanceName = "instanceName";
     private static final String pluginInstanceParams = "pluginInstanceParams";
+    private static final AlertPluginInstanceType pluginInstanceType = AlertPluginInstanceType.NORMAL;
+    private static final WarningType warningType = WarningType.ALL;
     private static final Result expectResponseContent = JSONUtils.parseObject(
             "{\"code\":0,\"msg\":\"success\",\"data\":\"Test Data\",\"success\":true,\"failed\":false}", Result.class);
     private static final ImmutableMap<String, Object> alertPluginInstanceServiceResult =
@@ -66,10 +70,12 @@ public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
         final MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
         paramsMap.add("pluginDefineId", String.valueOf(pluginDefineId));
         paramsMap.add("instanceName", instanceName);
+        paramsMap.add("instanceType", pluginInstanceType.getDescp());
+        paramsMap.add("warningType", warningType.name());
         paramsMap.add("pluginInstanceParams", pluginInstanceParams);
 
         when(alertPluginInstanceService.create(any(User.class), eq(pluginDefineId), eq(instanceName),
-                eq(pluginInstanceParams)))
+                eq(pluginInstanceType), eq(warningType), eq(pluginInstanceParams)))
                         .thenReturn(alertPluginInstanceServiceResult);
 
         // When
@@ -87,15 +93,44 @@ public class AlertPluginInstanceControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testSendAlertPluginInstance() throws Exception {
+        // Given
+        Result result = JSONUtils.parseObject(
+                "{\"code\":0,\"msg\":\"success\",\"data\":\"Test Data\",\"success\":true,\"failed\":false}",
+                Result.class);
+
+        final MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
+        paramsMap.add("pluginDefineId", String.valueOf(pluginDefineId));
+        paramsMap.add("pluginInstanceParams", pluginInstanceParams);
+
+        when(alertPluginInstanceService.testSend(eq(pluginDefineId), eq(pluginInstanceParams)))
+                .thenReturn(result);
+
+        // When
+        final MvcResult mvcResult = mockMvc.perform(post("/alert-plugin-instances/test-send")
+                .header(SESSION_ID, sessionId)
+                .params(paramsMap))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        // Then
+        final Result actualResponseContent =
+                JSONUtils.parseObject(mvcResult.getResponse().getContentAsString(), Result.class);
+        assertThat(actualResponseContent.toString()).isEqualTo(expectResponseContent.toString());
+    }
+
+    @Test
     public void testUpdateAlertPluginInstance() throws Exception {
         // Given
         final MultiValueMap<String, String> paramsMap = new LinkedMultiValueMap<>();
         paramsMap.add("pluginDefineId", String.valueOf(pluginDefineId));
         paramsMap.add("instanceName", instanceName);
+        paramsMap.add("warningType", warningType.name());
         paramsMap.add("pluginInstanceParams", pluginInstanceParams);
 
         when(alertPluginInstanceService.update(any(User.class), eq(pluginDefineId), eq(instanceName),
-                eq(pluginInstanceParams)))
+                eq(warningType), eq(pluginInstanceParams)))
                         .thenReturn(alertPluginInstanceServiceResult);
 
         // When
