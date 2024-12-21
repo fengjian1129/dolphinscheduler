@@ -4,9 +4,9 @@
 
 Spark  任务类型用于执行 Spark 应用。对于 Spark 节点，worker 支持两个不同类型的 spark 命令提交任务：
 
-(1) `spark submit` 方式提交任务。更多详情查看 [spark-submit](https://spark.apache.org/docs/3.2.1/submitting-applications.html#launching-applications-with-spark-submit)。
+(1) `spark submit` 方式提交任务。更多详情查看 [spark-submit](https://archive.apache.org/dist/spark/docs/3.2.1/#running-the-examples-and-shell)。
 
-(2) `spark sql` 方式提交任务。更多详情查看 [spark sql](https://spark.apache.org/docs/3.2.1/sql-ref-syntax.html)。
+(2) `spark sql` 方式提交任务。更多详情查看 [spark sql](https://archive.apache.org/dist/spark/docs/3.2.1/api/sql/index.html)。
 
 ## 创建任务
 
@@ -23,6 +23,7 @@ Spark  任务类型用于执行 Spark 应用。对于 Spark 节点，worker 支�
 - 程序类型：支持 Java、Scala、Python 和 SQL 四种语言。
 - 主函数的 Class：Spark 程序的入口 Main class 的全路径。
 - 主程序包：执行 Spark 程序的 jar 包（通过资源中心上传）。
+- Master：执行 Spark 集群的 Master Url。
 - SQL脚本：Spark sql 运行的 .sql 文件中的 SQL 语句。
 - 部署方式：(1) spark submit 支持 cluster、client 和 local 三种模式。
   (2) spark sql 支持 client 和 local 两种模式。
@@ -34,7 +35,7 @@ Spark  任务类型用于执行 Spark 应用。对于 Spark 节点，worker 支�
 - Executor 内存数：用于设置 Executor 内存数，可根据实际生产环境设置对应的内存数。
 - Yarn 队列：用于设置 Yarn 队列，默认使用 default 队列。
 - 主程序参数：设置 Spark 程序的输入参数，支持自定义参数变量的替换。
-- 选项参数：支持 `--jars`、`--files`、`--archives`、`--conf` 格式。
+- 选项参数：设置Spark命令的选项参数，例如`--jars`、`--files`、`--archives`、`--conf`。
 - 资源：如果其他参数中引用了资源文件，需要在资源中选择指定。
 - 自定义参数：是 Spark 局部的用户自定义参数，会替换脚本中以 ${变量} 的内容。
 

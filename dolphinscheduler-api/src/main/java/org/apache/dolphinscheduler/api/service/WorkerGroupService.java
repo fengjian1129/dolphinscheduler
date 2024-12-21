@@ -18,15 +18,13 @@
 package org.apache.dolphinscheduler.api.service;
 
 import org.apache.dolphinscheduler.api.utils.Result;
-import org.apache.dolphinscheduler.dao.entity.TaskInstance;
 import org.apache.dolphinscheduler.dao.entity.User;
+import org.apache.dolphinscheduler.dao.entity.WorkerGroup;
+import org.apache.dolphinscheduler.dao.entity.WorkerGroupPageDetail;
 
 import java.util.List;
 import java.util.Map;
 
-/**
- * worker group service
- */
 public interface WorkerGroupService {
 
     /**
@@ -37,11 +35,9 @@ public interface WorkerGroupService {
      * @param name worker group name
      * @param addrList addr list
      * @param description   description
-     * @param otherParamsJson  otherParamsJson
      * @return create or update result code
      */
-    Map<String, Object> saveWorkerGroup(User loginUser, int id, String name, String addrList, String description,
-                                        String otherParamsJson);
+    WorkerGroup saveWorkerGroup(User loginUser, int id, String name, String addrList, String description);
 
     /**
      * Query worker group paging
@@ -78,17 +74,12 @@ public interface WorkerGroupService {
     Map<String, Object> getWorkerAddressList();
 
     /**
-     * Get task instance's worker group
-     * @param taskInstance task instance
-     * @return worker group
-     */
-    String getTaskWorkerGroup(TaskInstance taskInstance);
-
-    /**
-     * Query worker group by process definition codes
-     * @param processDefinitionCodeList processDefinitionCodeList
+     * Query worker group by workflow definition codes
+     * @param workflowDefinitionCodeList workflowDefinitionCodeList
      * @return worker group map
      */
-    Map<Long, String> queryWorkerGroupByProcessDefinitionCodes(List<Long> processDefinitionCodeList);
+    Map<Long, String> queryWorkerGroupByWorkflowDefinitionCodes(List<Long> workflowDefinitionCodeList);
+
+    List<WorkerGroupPageDetail> getConfigWorkerGroupPageDetail();
 
 }

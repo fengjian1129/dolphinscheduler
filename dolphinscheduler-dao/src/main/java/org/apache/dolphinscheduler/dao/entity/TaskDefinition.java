@@ -34,7 +34,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -47,6 +50,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Strings;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @TableName("t_ds_task_definition")
 public class TaskDefinition {
 
@@ -112,13 +118,9 @@ public class TaskDefinition {
 
     /**
      * task is valid: yes/no
+     * // todo: remove the flag field
      */
     private Flag flag;
-
-    /**
-     * task is cache: yes/no
-     */
-    private Flag isCache;
 
     /**
      * task priority
@@ -179,8 +181,9 @@ public class TaskDefinition {
     private int delayTime;
 
     /**
-     * resource ids
+     * resource ids we do
      */
+    @Deprecated
     private String resourceIds;
 
     /**
@@ -222,9 +225,6 @@ public class TaskDefinition {
      * task execute type
      */
     private TaskExecuteType taskExecuteType;
-
-    public TaskDefinition() {
-    }
 
     public TaskDefinition(long code, int version) {
         this.code = code;
@@ -286,7 +286,6 @@ public class TaskDefinition {
                 && Objects.equals(taskType, that.taskType)
                 && Objects.equals(taskParams, that.taskParams)
                 && flag == that.flag
-                && isCache == that.isCache
                 && taskPriority == that.taskPriority
                 && Objects.equals(workerGroup, that.workerGroup)
                 && timeoutFlag == that.timeoutFlag

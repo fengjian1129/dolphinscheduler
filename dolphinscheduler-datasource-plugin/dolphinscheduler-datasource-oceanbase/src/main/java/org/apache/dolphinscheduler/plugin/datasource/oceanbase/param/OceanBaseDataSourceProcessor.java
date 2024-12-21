@@ -18,8 +18,8 @@
 package org.apache.dolphinscheduler.plugin.datasource.oceanbase.param;
 
 import org.apache.dolphinscheduler.common.constants.Constants;
-import org.apache.dolphinscheduler.common.constants.DataSourceConstants;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
+import org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.AbstractDataSourceProcessor;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSourceParamDTO;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.DataSourceProcessor;
@@ -40,6 +40,7 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.alibaba.druid.sql.parser.SQLParserUtils;
 import com.google.auto.service.AutoService;
 
 @Slf4j
@@ -187,5 +188,11 @@ public class OceanBaseDataSourceProcessor extends AbstractDataSourceProcessor {
     @Override
     public DataSourceProcessor create() {
         return new OceanBaseDataSourceProcessor();
+    }
+
+    @Override
+    public List<String> splitAndRemoveComment(String sql) {
+        String cleanSQL = SQLParserUtils.removeComment(sql, com.alibaba.druid.DbType.oceanbase);
+        return SQLParserUtils.split(cleanSQL, com.alibaba.druid.DbType.oceanbase);
     }
 }

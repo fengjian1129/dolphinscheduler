@@ -19,19 +19,19 @@ package org.apache.dolphinscheduler.extract.base.client;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.dolphinscheduler.extract.base.NettyRemotingClient;
 import org.apache.dolphinscheduler.extract.base.RpcMethod;
 import org.apache.dolphinscheduler.extract.base.utils.Host;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ClientInvocationHandler implements InvocationHandler {
+class ClientInvocationHandler implements InvocationHandler {
 
     private final NettyRemotingClient nettyRemotingClient;
 
@@ -39,7 +39,7 @@ public class ClientInvocationHandler implements InvocationHandler {
 
     private final Host serverHost;
 
-    public ClientInvocationHandler(Host serverHost, NettyRemotingClient nettyRemotingClient) {
+    ClientInvocationHandler(Host serverHost, NettyRemotingClient nettyRemotingClient) {
         this.serverHost = checkNotNull(serverHost);
         this.nettyRemotingClient = checkNotNull(nettyRemotingClient);
         this.methodInvokerMap = new ConcurrentHashMap<>();
@@ -52,7 +52,13 @@ public class ClientInvocationHandler implements InvocationHandler {
         }
         ClientMethodInvoker methodInvoker = methodInvokerMap.computeIfAbsent(
                 method.toGenericString(), m -> new SyncClientMethodInvoker(serverHost, method, nettyRemotingClient));
-        return methodInvoker.invoke(proxy, method, args);
+        try {
+            return methodInvoker.invoke(proxy, method, args);
+        } catch (UndeclaredThrowableException undeclaredThrowableException) {
+            throw undeclaredThrowableException.getCause();
+        } catch (Throwable throwable) {
+            throw throwable;
+        }
     }
 
 }

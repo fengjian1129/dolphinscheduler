@@ -50,7 +50,6 @@ export function useSql({
     sqlType: '0',
     preStatements: [],
     postStatements: [],
-    udfs: [],
     timeoutNotifyStrategy: ['WARN']
   } as INodeData)
 
@@ -59,10 +58,9 @@ export function useSql({
       Fields.useName(from),
       ...Fields.useTaskDefinition({ projectCode, from, readonly, data, model }),
       Fields.useRunFlag(),
-      Fields.useCache(),
       Fields.useDescription(),
       Fields.useTaskPriority(),
-      Fields.useWorkerGroup(),
+      Fields.useWorkerGroup(projectCode),
       Fields.useEnvironmentName(model, !data?.id),
       ...Fields.useTaskGroup(model, projectCode),
       ...Fields.useFailed(),

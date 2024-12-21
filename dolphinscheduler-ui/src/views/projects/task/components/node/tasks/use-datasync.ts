@@ -50,12 +50,12 @@ export function useDatasync({
   if (from === 1) {
     extra = [
       Fields.useTaskType(model, readonly),
-      Fields.useProcessName({
+      Fields.useWorkflowName({
         model,
         projectCode,
         isCreate: !data?.id,
         from,
-        processName: data?.processName
+        workflowName: data?.workflowDefinitionName
       })
     ]
   }
@@ -65,10 +65,9 @@ export function useDatasync({
       Fields.useName(from),
       ...extra,
       Fields.useRunFlag(),
-      Fields.useCache(),
       Fields.useDescription(),
       Fields.useTaskPriority(),
-      Fields.useWorkerGroup(),
+      Fields.useWorkerGroup(projectCode),
       Fields.useEnvironmentName(model, !data?.id),
       ...Fields.useTaskGroup(model, projectCode),
       ...Fields.useFailed(),

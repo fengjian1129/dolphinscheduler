@@ -459,11 +459,11 @@ A: 1, cd dolphinscheduler-ui and delete node_modules directory
 sudo rm -rf node_modules
 ```
 
-​ 2, install node-sass through npm.taobao.org
+​ 2, install node-sass through npmmirror.com
 
 ```
 sudo npm uninstall node-sass
-sudo npm i node-sass --sass_binary_site=https://npm.taobao.org/mirrors/node-sass/
+sudo npm i node-sass --sass_binary_site=https://npmmirror.com/mirrors/node-sass/
 ```
 
 3, if the 2nd step failure, please, [referer url](https://github.com/apache/dolphinscheduler/blob/dev/docs/docs/en/contribute/frontend-development.md)
@@ -506,7 +506,7 @@ A: 1, Where is the executed server? Specify one worker to run the task, you can 
 
 ## Q : What’s the best deploy mode you suggest in production env
 
-A: 1, I suggest you use 3 nodes for stability if you don't have too many tasks to run. And deploy Master/Worker server on different nodes is better. If you only have one node, you of course only can deploy them together! By the way, how many machines you need is determined by your business. The DolphinScheduler system itself does not use too many resources. Test more, and you'll find the right way to use a few machines.
+A: 1, I suggest you use 3 nodes for stability if you don't have too many tasks to run. And deploy Master/Worker/Api server on different nodes is better. If you only have one node, you of course only can deploy them together! By the way, how many machines you need is determined by your business. The DolphinScheduler system itself does not use too many resources. Test more, and you'll find the right way to use a few machines.
 
 ---
 
@@ -751,21 +751,5 @@ start API server. If you want disabled when Python gateway service you could cha
 `api-server/conf/application.yaml` and change attribute `python-gateway.enabled : false`.
 
 ---
-
-## Q：How to determine whether a task has been cached when the cache is executed, that is, how to determine whether a task can use the running result of another task?
-
-A: For the task identified as `Cache Execution`, when the task starts, a cache key will be generated, and the key is composed of the following fields and hashed:
-
-- task definition: the id of the task definition corresponding to the task instance
-- task version: the version of the task definition corresponding to the task instance
-- task input parameters: including the parameters passed in by the upstream node and the global parameter, the parameters referenced by the parameter list of the task definition and the parameters used by the task definition using `${}`
-- environment configuration: the actual configuration content of the environment configuration under the environment name, that is, the actual configuration content in the `security` - `environment management`
-
-If the task with cache identification runs, it will find whether there is data with the same cache key in the database,
-
-- If there is, copy the task instance and update the corresponding data
-- If not, the task runs as usual, and the task instance data is stored in the cache when the task is completed
-
-If you do not need to cache, you can right-click the node to run `Clear cache` in the workflow instance to clear the cache, which will clear the cache data of the current input parameters under this version.
 
 We will collect more FAQ later

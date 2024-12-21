@@ -101,6 +101,17 @@ sub   4096R/A63BC462 2019-11-15
 
 Among them, 85E11560 is public key ID.
 
+The format has changed after gpg2.0 version
+
+```shell
+pub   rsa4096 2023-07-01 [SC]
+1234ABCD5678EFGH9012IJKL3456MNOP7890QRST
+uid           [ultimate] ${用户名} <{邮件地址}>
+sub   rsa4096 2023-07-01 [E]
+```
+
+Among them, 1234ABCD5678EFGH9012IJKL3456MNOP7890QRST is public key ID。
+
 #### Upload the Public Key to Key Server
 
 The command is as follow:
@@ -192,6 +203,12 @@ We need to update some documentation before the Maven release. For example, to r
 
 > Note: `VERSION` is a place hold string, is same as the version we set in `VERSION=<THE-VERSION-YOU-RELEASE>`.
 
+### Modify Correct year in NOTICE file
+
+The NOTICE file needs to be checked, changing the correct year in the second line to the current year. Files to check include
+- `dolphinscheduler-dist/release-docs/NOTICE`
+- `NOTICE`
+
 ### Maven Release
 
 #### Maven Release Check
@@ -208,7 +225,7 @@ git push "${GH_REMOTE}" "${VERSION}"-release
 > first to clone the source code. And then make sure you set `GH_REMOTE="origin"` to make all command work fine.
 
 ```shell
-mvn release:prepare -Prelease -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dmaven.javadoc.skip=true -Dspotless.check.skip=true" -DautoVersionSubmodules=true -DdryRun=true -Dusername="${GH_USERNAME}"
+mvn release:prepare -Prelease -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dspotless.check.skip=true" -DautoVersionSubmodules=true -DdryRun=true -Dusername="${GH_USERNAME}"
 ```
 
 - `-Prelease`: choose release profile, which will pack all the source codes, jar files and executable binary packages.
@@ -226,7 +243,7 @@ mvn release:clean
 Then, prepare to execute the release.
 
 ```shell
-mvn release:prepare -Prelease -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dmaven.javadoc.skip=true -Dspotless.check.skip=true" -DautoVersionSubmodules=true -DpushChanges=false -Dusername="${GH_USERNAME}"
+mvn release:prepare -Prelease -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dspotless.check.skip=true" -DautoVersionSubmodules=true -DpushChanges=false -Dusername="${GH_USERNAME}"
 ```
 
 It is basically the same as the previous rehearsal command, but deleting `-DdryRun=true` parameter.
@@ -258,7 +275,7 @@ git push "${GH_REMOTE}" --tags
 #### Maven Release Deploy
 
 ```shell
-mvn release:perform -Prelease -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dmaven.javadoc.skip=true -Dspotless.check.skip=true" -DautoVersionSubmodules=true -Dusername="${GH_USERNAME}"
+mvn release:perform -Prelease -Darguments="-Dmaven.test.skip=true -Dspotless.skip=true -Dspotless.check.skip=true" -DautoVersionSubmodules=true -Dusername="${GH_USERNAME}"
 ```
 
 After that command is executed, the version to be released will be uploaded to Apache staging repository automatically.
@@ -270,7 +287,7 @@ If there is any problem in gpg signature, `Close` will fail, but you can see the
 
 #### Checkout Dolphinscheduler Release Directory
 
-We need too checkout Dolphinscheduler dev release directory to local, and
+We need to checkout Dolphinscheduler dev release directory to local, and
 
 ```shell
 SVN_DIR_DEV="${SVN_DIR}/dolphinscheduler/dev"
@@ -288,8 +305,8 @@ svn --username="${A_USERNAME}" update "${SVN_DIR_DEV}"
 
 #### Export New GPG Key to KEYS(Optional)
 
-Only if the first time you release with this gpg KEY, including it is you first release, or you change your KEY. You should
-change working directory to another one because this step need checkout and change KEYS in release directory.
+Only if the first time you release with this gpg KEY, including it is your first release, or you change your KEY. You should
+change the working directory to another one because this step needs checkout and change KEYS in the release directory.
 
 ```shell
 # Optional, only if the SVN root path not exists.
@@ -369,7 +386,7 @@ Decompress `apache-dolphinscheduler-<VERSION>-bin.tar.gz` to check the following
 
 You should create a release note in GitHub by [new release note](https://github.com/apache/dolphinscheduler/releases/new).
 It should be done before vote mail because we need the release note in the mail. You could use command
-`python release.py changelog` in directory `tools/release` to creat the changelog.
+`python release.py changelog` in directory `tools/release` to creat the changelog.([Usage](https://github.com/apache/dolphinscheduler/blob/dev/tools/release/README.md)
 
 > NOTE: Or if you prefer to create manually, you can use command `git log --pretty="- %s" <PREVIOUS-RELEASE-SHA>..<CURRENT-RELEASE-SHA> > changelog.md`
 > (some log maybe not correct, you should filter them by yourself) and classify them and paste them to GitHub release note page
@@ -468,9 +485,6 @@ svn mv -m "release ${VERSION}" https://dist.apache.org/repos/dist/dev/dolphinsch
 # remove old release directory
 svn delete -m "remove old release" https://dist.apache.org/repos/dist/release/dolphinscheduler/<PREVIOUS-RELEASE-VERSION>
 
-# Remove prepare branch
-cd "${SOURCE_CODE_DIR}"
-git push --delete "${GH_REMOTE}" "${VERSION}-prepare"
 ```
 
 and then find DolphinScheduler in [apache staging repositories](https://repository.apache.org/#stagingRepositories) and click `Release`
@@ -497,14 +511,14 @@ the release version is `<VERSION>`, the following updates are required(note it w
 
 We have a [workflow](../../../../.github/workflows/publish-docker.yaml) to automatically publish Docker images
 and a [workflow](../../../../.github/workflows/publish-helm-chart.yaml) to automatically publish Helm Chart to Docker Hub,
-after you change the release from "pre-release" to "release", the workflow will be triggered. All you need to do
+after you create release node, the workflow will be triggered. All you need to do
 is to observe the aforementioned workflows, and after they are completed, you can pull the Docker images locally and
 verify that they work as expected.
 
 ### Send Announcement E-mail Community
 
 You should send announcement E-mail after release process finished. The E-mail should send to `dev@dolphinscheduler.apache.org`
-and cc to `announce@apache.org`.
+and cc to `announce@apache.org`, Note: **Mail format requires plain text format**.
 
 Announcement e-mail template as below：
 
@@ -535,6 +549,13 @@ DolphinScheduler Resources:
 - Issue: https://github.com/apache/dolphinscheduler/issues/
 - Mailing list: dev@dolphinscheduler.apache.org
 - Documents: https://dolphinscheduler.apache.org/en-us/docs/<VERSION>/about/introduction
+```
+
+## Remove prepare branch
+
+```shell
+cd "${SOURCE_CODE_DIR}"
+git push --delete "${GH_REMOTE}" "${VERSION}-prepare"
 ```
 
 ## News

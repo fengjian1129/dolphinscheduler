@@ -22,11 +22,14 @@ import static org.apache.dolphinscheduler.api.enums.Status.QUERY_WORKER_ADDRESS_
 import static org.apache.dolphinscheduler.api.enums.Status.QUERY_WORKER_GROUP_FAIL;
 import static org.apache.dolphinscheduler.api.enums.Status.SAVE_ERROR;
 
+import org.apache.dolphinscheduler.api.audit.OperatorLog;
+import org.apache.dolphinscheduler.api.audit.enums.AuditType;
 import org.apache.dolphinscheduler.api.exceptions.ApiException;
 import org.apache.dolphinscheduler.api.service.WorkerGroupService;
 import org.apache.dolphinscheduler.api.utils.Result;
 import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.dao.entity.User;
+import org.apache.dolphinscheduler.dao.entity.WorkerGroup;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 
 import java.util.Map;
@@ -49,16 +52,13 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-/**
- * worker group controller
- */
 @Tag(name = "WORKER_GROUP_TAG")
 @RestController
 @RequestMapping("/worker-groups")
 public class WorkerGroupController extends BaseController {
 
     @Autowired
-    WorkerGroupService workerGroupService;
+    private WorkerGroupService workerGroupService;
 
     /**
      * create or update a worker group
@@ -75,20 +75,18 @@ public class WorkerGroupController extends BaseController {
             @Parameter(name = "name", description = "WORKER_GROUP_NAME", required = true, schema = @Schema(implementation = String.class)),
             @Parameter(name = "addrList", description = "WORKER_ADDR_LIST", required = true, schema = @Schema(implementation = String.class)),
             @Parameter(name = "description", description = "WORKER_DESC", required = false, schema = @Schema(implementation = String.class)),
-            @Parameter(name = "otherParamsJson", description = "WORKER_PARMS_JSON", required = false, schema = @Schema(implementation = String.class)),
     })
     @PostMapping()
     @ResponseStatus(HttpStatus.OK)
     @ApiException(SAVE_ERROR)
-    public Result saveWorkerGroup(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
-                                  @RequestParam(value = "id", required = false, defaultValue = "0") int id,
-                                  @RequestParam(value = "name") String name,
-                                  @RequestParam(value = "addrList") String addrList,
-                                  @RequestParam(value = "description", required = false, defaultValue = "") String description,
-                                  @RequestParam(value = "otherParamsJson", required = false, defaultValue = "") String otherParamsJson) {
-        Map<String, Object> result =
-                workerGroupService.saveWorkerGroup(loginUser, id, name, addrList, description, otherParamsJson);
-        return returnDataList(result);
+    @OperatorLog(auditType = AuditType.WORKER_GROUP_CREATE)
+    public Result<WorkerGroup> saveWorkerGroup(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
+                                               @RequestParam(value = "id", required = false, defaultValue = "0") int id,
+                                               @RequestParam(value = "name") String name,
+                                               @RequestParam(value = "addrList") String addrList,
+                                               @RequestParam(value = "description", required = false, defaultValue = "") String description) {
+        final WorkerGroup workerGroup = workerGroupService.saveWorkerGroup(loginUser, id, name, addrList, description);
+        return Result.success(workerGroup);
     }
 
     /**
@@ -113,14 +111,9 @@ public class WorkerGroupController extends BaseController {
                                              @RequestParam("pageNo") Integer pageNo,
                                              @RequestParam("pageSize") Integer pageSize,
                                              @RequestParam(value = "searchVal", required = false) String searchVal) {
-        Result result = checkPageParams(pageNo, pageSize);
-        if (!result.checkResult()) {
-            return result;
-
-        }
+        checkPageParams(pageNo, pageSize);
         searchVal = ParameterUtils.handleEscapes(searchVal);
-        result = workerGroupService.queryAllGroupPaging(loginUser, pageNo, pageSize, searchVal);
-        return result;
+        return workerGroupService.queryAllGroupPaging(loginUser, pageNo, pageSize, searchVal);
     }
 
     /**
@@ -152,6 +145,7 @@ public class WorkerGroupController extends BaseController {
     @DeleteMapping(value = "/{id}")
     @ResponseStatus(HttpStatus.OK)
     @ApiException(DELETE_WORKER_GROUP_FAIL)
+    @OperatorLog(auditType = AuditType.WORKER_GROUP_DELETE)
     public Result deleteWorkerGroupById(@Parameter(hidden = true) @RequestAttribute(value = Constants.SESSION_USER) User loginUser,
                                         @PathVariable("id") Integer id) {
         Map<String, Object> result = workerGroupService.deleteWorkerGroupById(loginUser, id);
@@ -172,5 +166,4 @@ public class WorkerGroupController extends BaseController {
         Map<String, Object> result = workerGroupService.getWorkerAddressList();
         return returnDataList(result);
     }
-
 }

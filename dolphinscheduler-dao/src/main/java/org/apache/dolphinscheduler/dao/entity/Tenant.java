@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.dolphinscheduler.dao.entity;
 
 import java.util.Date;
-import java.util.Objects;
 
 import lombok.Data;
 
@@ -94,22 +94,4 @@ public class Tenant {
         this.updateTime = now;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        Tenant tenant = (Tenant) o;
-
-        return Objects.equals(id, tenant.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 }

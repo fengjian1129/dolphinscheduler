@@ -98,12 +98,8 @@ export default {
                                 link: '/en-us/docs/dev/user_doc/guide/task/shell.html',
                             },
                             {
-                                title: 'SubProcess',
-                                link: '/en-us/docs/dev/user_doc/guide/task/sub-process.html',
-                            },
-                            {
-                                title: 'Dynamic',
-                                link: '/en-us/docs/dev/user_doc/guide/task/dynamic.html',
+                                title: 'SubWorkflow',
+                                link: '/en-us/docs/dev/user_doc/guide/task/sub-workflow.html',
                             },
                             {
                                 title: 'Dependent',
@@ -144,10 +140,6 @@ export default {
                             {
                                 title: 'Sqoop',
                                 link: '/en-us/docs/dev/user_doc/guide/task/sqoop.html',
-                            },
-                            {
-                                title: 'Pigeon',
-                                link: '/en-us/docs/dev/user_doc/guide/task/pigeon.html',
                             },
                             {
                                 title: 'Conditions',
@@ -230,8 +222,8 @@ export default {
                                 link: '/en-us/docs/dev/user_doc/guide/task/linkis.html',
                             },
                             {
-                                title: 'SSH',
-                                link: '/en-us/docs/dev/user_doc/guide/task/ssh.html',
+                                title: 'Remote Shell',
+                                link: '/en-us/docs/dev/user_doc/guide/task/remoteshell.html',
                             },
                         ],
                     },
@@ -265,10 +257,6 @@ export default {
                             {
                                 title: 'File Parameter',
                                 link: '/en-us/docs/dev/user_doc/guide/parameter/file-parameter.html',
-                            },
-                            {
-                                title: 'Vertica',
-                                link: '/en-us/docs/dev/user_doc/guide/datasource/vertica.html',
                             },
                         ],
                     },
@@ -362,6 +350,10 @@ export default {
                             {
                                 title: 'doris',
                                 link: '/en-us/docs/dev/user_doc/guide/datasource/doris.html',
+                            },
+                            {
+                                title: 'Vertica',
+                                link: '/en-us/docs/dev/user_doc/guide/datasource/vertica.html',
                             }
                         ],
                     },
@@ -407,6 +399,9 @@ export default {
                             {
                                 title: 'Slack',
                                 link: '/en-us/docs/dev/user_doc/guide/alert/slack.html',
+                            },{
+                                title: 'Aliyun Voice',
+                                link: '/en-us/docs/dev/user_doc/guide/alert/aliyun-voice.html',
                             },
                         ],
                     },
@@ -424,10 +419,6 @@ export default {
                             {
                                 title: 'File Manage',
                                 link: '/en-us/docs/dev/user_doc/guide/resource/file-manage.html'
-                            },
-                            {
-                                title: 'UDF Manage',
-                                link: '/en-us/docs/dev/user_doc/guide/resource/udf-manage.html'
                             },
                             {
                                 title: 'Task Group Manage',
@@ -461,10 +452,6 @@ export default {
                                 link: '/en-us/docs/dev/user_doc/guide/metrics/metrics.html',
                             }
                         ],
-                    },
-                    {
-                        title: 'Data Quality',
-                        link: '/en-us/docs/dev/user_doc/guide/data-quality.html',
                     },
                     {
                         title: 'Remote Logging',
@@ -511,6 +498,14 @@ export default {
                     {
                         title: 'Kubernetes Deployment',
                         link: '/en-us/docs/dev/user_doc/guide/installation/kubernetes.html',
+                    },
+                    {
+                        title: 'General Setting',
+                        link: '/en-us/docs/dev/user_doc/guide/installation/general-setting.html',
+                    },
+                    {
+                        title: 'Datasource Setting',
+                        link: '/en-us/docs/dev/user_doc/guide/installation/datasource-setting.html',
                     },
                     {
                         title: 'integration',
@@ -575,6 +570,10 @@ export default {
                     {
                         title: 'Join',
                         children: [
+                            {
+                                title: 'Security model',
+                                link: '/en-us/docs/dev/user_doc/contribute/join/security-model.html',
+                            },
                             {
                                 title: 'Security Report',
                                 link: '/en-us/docs/dev/user_doc/contribute/join/security.html',
@@ -719,23 +718,6 @@ export default {
                 ],
             },
             {
-                title: 'FAQ',
-                children: [
-                    {
-                        title: 'General Setting',
-                        link: '/en-us/docs/dev/user_doc/guide/howto/general-setting.html',
-                    },
-                    {
-                        title: 'Datasource Setting',
-                        link: '/en-us/docs/dev/user_doc/guide/howto/datasource-setting.html',
-                    },
-                    {
-                        title: 'Others',
-                        link: '/en-us/docs/release/faq.html',
-                    }
-                ],
-            },
-            {
                 title: 'Older Versions',
                 children: [
                     {
@@ -827,12 +809,8 @@ export default {
                                 link: '/zh-cn/docs/dev/user_doc/guide/task/shell.html',
                             },
                             {
-                                title: 'SubProcess',
-                                link: '/zh-cn/docs/dev/user_doc/guide/task/sub-process.html',
-                            },
-                            {
-                                title: 'Dynamic',
-                                link: '/zh-cn/docs/dev/user_doc/guide/task/dynamic.html',
+                                title: 'SubWorkflow',
+                                link: '/zh-cn/docs/dev/user_doc/guide/task/sub-workflow.html',
                             },
                             {
                                 title: 'Dependent',
@@ -873,10 +851,6 @@ export default {
                             {
                                 title: 'Sqoop',
                                 link: '/zh-cn/docs/dev/user_doc/guide/task/sqoop.html',
-                            },
-                            {
-                                title: 'Pigeon',
-                                link: '/zh-cn/docs/dev/user_doc/guide/task/pigeon.html',
                             },
                             {
                                 title: 'Conditions',
@@ -959,12 +933,8 @@ export default {
                                 link: '/zh-cn/docs/dev/user_doc/guide/task/linkis.html',
                             },
                             {
-                                title: 'SSH',
-                                link: '/zh-cn/docs/dev/user_doc/guide/task/ssh.html',
-                            },
-                            {
-                                title: 'Vertica',
-                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/vertica.html',
+                                title: 'Remote Shell',
+                                link: '/zh-cn/docs/dev/user_doc/guide/task/remoteshell.html',
                             },
                         ],
                     },
@@ -1075,7 +1045,11 @@ export default {
                             {
                                 title: 'Doris',
                                 link: '/zh-cn/docs/dev/user_doc/guide/datasource/doris.html',
-                            }
+                            },
+                            {
+                                title: 'Vertica',
+                                link: '/zh-cn/docs/dev/user_doc/guide/datasource/vertica.html',
+                            },
                         ],
                     },
                     {
@@ -1121,6 +1095,10 @@ export default {
                                 title: 'Slack告警',
                                 link: '/zh-cn/docs/dev/user_doc/guide/alert/slack.html',
                             },
+                            {
+                                title: '阿里云语音告警',
+                                link: '/zh-cn/docs/dev/user_doc/guide/alert/aliyun-voice.html',
+                            },
                         ],
                     },
                     {
@@ -1137,10 +1115,6 @@ export default {
                             {
                                 title: '文件管理',
                                 link: '/zh-cn/docs/dev/user_doc/guide/resource/file-manage.html'
-                            },
-                            {
-                                title: 'UDF 管理',
-                                link: '/zh-cn/docs/dev/user_doc/guide/resource/udf-manage.html'
                             },
                             {
                                 title: '任务组管理',
@@ -1173,10 +1147,6 @@ export default {
                                 link: '/zh-cn/docs/dev/user_doc/guide/metrics/metrics.html',
                             }
                         ],
-                    },
-                    {
-                        title: '数据质量',
-                        link: '/zh-cn/docs/dev/user_doc/guide/data-quality.html',
                     },
                     {
                         title: '远程日志存储',
@@ -1223,6 +1193,14 @@ export default {
                     {
                         title: 'Kubernetes部署(Kubernetes)',
                         link: '/zh-cn/docs/dev/user_doc/guide/installation/kubernetes.html',
+                    },
+                    {
+                        title: '通用设置',
+                        link: '/zh-cn/docs/dev/user_doc/guide/installation/general-setting.html',
+                    },
+                    {
+                        title: '数据源设置',
+                        link: '/zh-cn/docs/dev/user_doc/guide/installation/datasource-setting.html',
                     },
                     {
                         title: '集成',
@@ -1287,6 +1265,10 @@ export default {
                     {
                         title: '如何参与',
                         children: [
+                            {
+                                title: '安全模型',
+                                link: '/zh-cn/docs/dev/user_doc/contribute/join/security-model.html',
+                            },
                             {
                                 title: '报告安全问题',
                                 link: '/zh-cn/docs/dev/user_doc/contribute/join/security.html',
@@ -1356,10 +1338,6 @@ export default {
                     {
                         title: '设计文档',
                         children: [
-                            // TODO not support multiply level for now
-                            // {
-                            // title: 'SPI',
-                            // children: [
                             {
                                 title: '架构设计',
                                 link: '/zh-cn/docs/dev/user_doc/contribute/architecture-design.html',
@@ -1427,23 +1405,6 @@ export default {
                     {
                         title: 'DSIP',
                         link: '/zh-cn/docs/dev/user_doc/DSIP.html',
-                    },
-                ],
-            },
-            {
-                title: 'FAQ',
-                children: [
-                    {
-                        title: '通用设置',
-                        link: '/zh-cn/docs/dev/user_doc/guide/howto/general-setting.html',
-                    },
-                    {
-                        title: '数据源设置',
-                        link: '/zh-cn/docs/dev/user_doc/guide/howto/datasource-setting.html',
-                    },
-                    {
-                        title: '其他',
-                        link: '/zh-cn/docs/release/faq.html',
                     },
                 ],
             },

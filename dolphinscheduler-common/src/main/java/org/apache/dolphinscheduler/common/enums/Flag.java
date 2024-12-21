@@ -26,7 +26,6 @@ import com.baomidou.mybatisplus.annotation.EnumValue;
  * have_arr_variables
  * have_map_variables
  * have_alert
- * is_cache
  */
 public enum Flag {
 
@@ -52,5 +51,12 @@ public enum Flag {
 
     public String getDescp() {
         return descp;
+    }
+
+    public static Flag of(int code) {
+        if (code == 0) {
+            return NO;
+        }
+        return YES;
     }
 }

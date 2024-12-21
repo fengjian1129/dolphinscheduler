@@ -35,18 +35,16 @@ task:
     - 'K8S'
     - 'DMS'
     - 'DATA_FACTORY'
+    - 'ALIYUN_SERVERLESS_SPARK'
   logic:
-    - 'SUB_PROCESS'
+    - 'SUB_WORKFLOW'
     - 'DEPENDENT'
     - 'CONDITIONS'
     - 'SWITCH'
-    - 'DYNAMIC'
   dataIntegration:
     - 'SEATUNNEL'
     - 'DATAX'
     - 'SQOOP'
-  dataQuality:
-    - 'DATA_QUALITY'
   machineLearning:
     - 'JUPYTER'
     - 'MLFLOW'
@@ -56,7 +54,6 @@ task:
     - 'PYTORCH'
     - 'KUBEFLOW'
   other:
-    - 'PIGEON'
     - 'ZEPPELIN'
     - 'CHUNJUN'
     - 'DATASYNC'

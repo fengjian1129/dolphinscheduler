@@ -24,7 +24,8 @@ import {
   toRef,
   watch,
   onBeforeUnmount,
-  computed
+  computed,
+  reactive
 } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -56,7 +57,7 @@ import { useAsyncState } from '@vueuse/core'
 import utils from '@/utils'
 import { useUISettingStore } from '@/store/ui-setting/ui-setting'
 import { executeTask } from '@/service/modules/executors'
-import { removeTaskInstanceCache } from '@/service/modules/task-instances'
+import DependenciesModal from '@/views/projects/components/dependencies/dependencies-modal'
 
 const props = {
   // If this prop is passed, it means from definition detail
@@ -116,7 +117,7 @@ export default defineComponent({
       appendTask,
       editTask,
       copyTask,
-      processDefinition,
+      workflowDefinition,
       removeTasks
     } = useTaskEdit({ graph, definition: toRef(props, 'definition') })
 
@@ -130,7 +131,7 @@ export default defineComponent({
       if (props.definition) {
         return (
           route.name === 'workflow-definition-detail' &&
-          props.definition!.processDefinition.releaseState === 'ONLINE'
+          props.definition!.workflowDefinition.releaseState === 'ONLINE'
         )
       } else {
         return false
@@ -153,7 +154,7 @@ export default defineComponent({
           props.instance.state === 'STOP'
         )
       } else if (props.definition) {
-        return props.definition!.processDefinition.releaseState === 'OFFLINE'
+        return props.definition!.workflowDefinition.releaseState === 'OFFLINE'
       } else {
         return false
       }
@@ -229,11 +230,11 @@ export default defineComponent({
       const connects = getConnects(
         nodes,
         edges,
-        processDefinition.value.taskDefinitionList as any
+        workflowDefinition.value.taskDefinitionList as any
       )
       const locations = getLocations(nodes)
       context.emit('save', {
-        taskDefinitions: processDefinition.value.taskDefinitionList,
+        taskDefinitions: workflowDefinition.value.taskDefinitionList,
         saveForm,
         connects,
         locations
@@ -295,7 +296,7 @@ export default defineComponent({
     ) => {
       executeTask(
         {
-          processInstanceId: Number(route.params.id),
+          workflowInstanceId: Number(route.params.id),
           startNodeList: startNodeList,
           taskDependType: taskDependType
         },
@@ -305,12 +306,6 @@ export default defineComponent({
         setTimeout(() => {
           window.location.reload()
         }, 1000)
-      })
-    }
-
-    const handleRemoveTaskInstanceCache = (taskId: number) => {
-      removeTaskInstanceCache(props.projectCode, taskId).then(() => {
-        window.$message.success(t('project.workflow.success'))
       })
     }
 
@@ -332,6 +327,14 @@ export default defineComponent({
         refreshTaskStatus()
       }
     }
+
+    const dependenciesData = reactive({
+      showRef: ref(false),
+      taskLinks: ref([]),
+      required: ref(false),
+      tip: ref(''),
+      action: () => {}
+    })
 
     watch(
       () => props.definition,
@@ -373,6 +376,7 @@ export default defineComponent({
           onSaveModelToggle={saveModelToggle}
           onRemoveTasks={removeTasks}
           onRefresh={refreshTaskStatus}
+          v-model:dependenciesData={dependenciesData}
         />
         <div class={Styles.content}>
           <DagSidebar onDragStart={onDragStart} />
@@ -388,7 +392,7 @@ export default defineComponent({
         {!!props.definition && (
           <VersionModal
             isInstance={!!props.instance}
-            v-model:row={props.definition.processDefinition}
+            v-model:row={props.definition.workflowDefinition}
             v-model:show={versionModalShow.value}
             onUpdateList={refreshDetail}
           />
@@ -403,11 +407,11 @@ export default defineComponent({
           readonly={props.readonly}
           show={taskModalVisible.value}
           projectCode={props.projectCode}
-          processInstance={props.instance}
+          workflowInstance={props.instance}
           taskInstance={currentTaskInstance.value}
           onViewLog={handleViewLog}
           data={currTask.value as any}
-          definition={processDefinition}
+          definition={workflowDefinition}
           onSubmit={taskConfirm}
           onCancel={taskCancel}
         />
@@ -427,11 +431,18 @@ export default defineComponent({
           onRemoveTasks={removeTasks}
           onViewLog={handleViewLog}
           onExecuteTask={handleExecuteTask}
-          onRemoveTaskInstanceCache={handleRemoveTaskInstanceCache}
+          v-model:dependenciesData={dependenciesData}
+        />
+        <DependenciesModal
+          v-model:show={dependenciesData.showRef}
+          v-model:taskLinks={dependenciesData.taskLinks}
+          required={dependenciesData.required}
+          content={dependenciesData.tip}
+          onConfirm={dependenciesData.action}
         />
         {!!props.definition && (
           <StartModal
-            v-model:row={props.definition.processDefinition}
+            v-model:row={props.definition.workflowDefinition}
             v-model:show={nodeVariables.startModalShow}
             taskCode={nodeVariables.taskCode}
           />

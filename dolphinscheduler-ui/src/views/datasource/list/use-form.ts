@@ -71,6 +71,10 @@ export function useForm(id?: number) {
     showPublicKey: false,
     showNamespace: false,
     showKubeConfig: false,
+    showAccessKeyId: false,
+    showAccessKeySecret: false,
+    showRegionId: false,
+    showEndpoint: false,
     rules: {
       name: {
         trigger: ['input'],
@@ -121,7 +125,8 @@ export function useForm(id?: number) {
           if (
             !state.detailForm.userName &&
             state.detailForm.type !== 'AZURESQL' &&
-            state.detailForm.type !== 'K8S'
+            state.detailForm.type !== 'K8S' &&
+            state.detailForm.type !== 'ALIYUN_SERVERLESS_SPARK'
           ) {
             return new Error(t('datasource.user_name_tips'))
           }
@@ -264,11 +269,13 @@ export function useForm(id?: number) {
     } else {
       state.showPrincipal = false
     }
+
     if (
       type === 'SSH' ||
       type === 'ZEPPELIN' ||
       type === 'SAGEMAKER' ||
-      type === 'K8S'
+      type === 'K8S' ||
+      type === 'ALIYUN_SERVERLESS_SPARK'
     ) {
       state.showDataBaseName = false
       state.requiredDataBase = false
@@ -281,20 +288,47 @@ export function useForm(id?: number) {
         state.showHost = false
         state.showPort = false
         state.showRestEndpoint = true
+      } else {
+        state.showRestEndpoint = false
       }
-      if (type === 'SAGEMAKER' || type === 'K8S') {
+      if (
+        type === 'SAGEMAKER' ||
+        type === 'K8S' ||
+        type == 'ALIYUN_SERVERLESS_SPARK'
+      ) {
         state.showHost = false
         state.showPort = false
       }
       if (type === 'K8S') {
         state.showNamespace = true
         state.showKubeConfig = true
+      } else {
+        state.showNamespace = false
+        state.showKubeConfig = false
+      }
+      if (type === 'ALIYUN_SERVERLESS_SPARK') {
+        state.showAccessKeyId = true
+        state.showAccessKeySecret = true
+        state.showRegionId = true
+        state.showEndpoint = true
+      } else {
+        state.showAccessKeyId = false
+        state.showAccessKeySecret = false
+        state.showRegionId = false
+        state.showEndpoint = false
       }
     } else {
       state.showDataBaseName = true
       state.requiredDataBase = true
       state.showJDBCConnectParameters = true
       state.showPublicKey = false
+      state.showRestEndpoint = false
+      state.showNamespace = false
+      state.showKubeConfig = false
+      state.showAccessKeyId = false
+      state.showAccessKeySecret = false
+      state.showRegionId = false
+      state.showEndpoint = false
     }
   }
 
@@ -458,6 +492,11 @@ export const datasourceType: IDataBaseOptionKeys = {
     value: 'K8S',
     label: 'K8S',
     defaultPort: 6443
+  },
+  ALIYUN_SERVERLESS_SPARK: {
+    value: 'ALIYUN_SERVERLESS_SPARK',
+    label: 'ALIYUN_SERVERLESS_SPARK',
+    defaultPort: 0
   }
 }
 

@@ -17,10 +17,8 @@
 
 package org.apache.dolphinscheduler.server.worker.config;
 
-import static org.apache.dolphinscheduler.common.constants.Constants.REGISTRY_DOLPHINSCHEDULER_WORKERS;
-
 import org.apache.dolphinscheduler.common.utils.NetUtils;
-import org.apache.dolphinscheduler.registry.api.ConnectStrategyProperties;
+import org.apache.dolphinscheduler.registry.api.enums.RegistryNodeType;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -43,14 +41,10 @@ import org.springframework.validation.annotation.Validated;
 public class WorkerConfig implements Validator {
 
     private int listenPort = 1234;
-    private int execThreads = 10;
-    private Duration heartbeatInterval = Duration.ofSeconds(10);
+    private Duration maxHeartbeatInterval = Duration.ofSeconds(10);
     private int hostWeight = 100;
-    private boolean tenantAutoCreate = true;
-    private boolean tenantDistributedUser = false;
-    private int maxCpuLoadAvg = -1;
-    private double reservedMemory = 0.1;
-    private ConnectStrategyProperties registryDisconnectStrategy = new ConnectStrategyProperties();
+    private WorkerServerLoadProtection serverLoadProtection = new WorkerServerLoadProtection();
+    private String group;
 
     /**
      * This field doesn't need to set at config file, it will be calculated by workerIp:listenPort
@@ -58,7 +52,9 @@ public class WorkerConfig implements Validator {
     private String workerAddress;
     private String workerRegistryPath;
 
-    private TaskExecuteThreadsFullPolicy taskExecuteThreadsFullPolicy = TaskExecuteThreadsFullPolicy.REJECT;
+    private TenantConfig tenantConfig = new TenantConfig();
+
+    private PhysicalTaskConfig physicalTaskConfig = new PhysicalTaskConfig();
 
     @Override
     public boolean supports(Class<?> clazz) {
@@ -68,35 +64,36 @@ public class WorkerConfig implements Validator {
     @Override
     public void validate(Object target, Errors errors) {
         WorkerConfig workerConfig = (WorkerConfig) target;
-        if (workerConfig.getExecThreads() <= 0) {
-            errors.rejectValue("exec-threads", null, "should be a positive value");
-        }
-        if (workerConfig.getHeartbeatInterval().getSeconds() <= 0) {
-            errors.rejectValue("heartbeat-interval", null, "shoule be a valid duration");
-        }
-        if (workerConfig.getMaxCpuLoadAvg() <= 0) {
-            workerConfig.setMaxCpuLoadAvg(Runtime.getRuntime().availableProcessors() * 2);
+        if (workerConfig.getMaxHeartbeatInterval().getSeconds() <= 0) {
+            errors.rejectValue("max-heartbeat-interval", null, "shoule be a valid duration");
         }
         if (StringUtils.isEmpty(workerConfig.getWorkerAddress())) {
             workerConfig.setWorkerAddress(NetUtils.getAddr(workerConfig.getListenPort()));
         }
 
-        workerConfig.setWorkerRegistryPath(REGISTRY_DOLPHINSCHEDULER_WORKERS + "/" + workerConfig.getWorkerAddress());
+        workerConfig.setWorkerRegistryPath(
+                RegistryNodeType.WORKER.getRegistryPath() + "/" + workerConfig.getWorkerAddress());
+
+        if (StringUtils.isEmpty(group)) {
+            workerConfig.setGroup("default");
+        }
+
         printConfig();
     }
 
     private void printConfig() {
-        log.info("Worker config: listenPort -> {}", listenPort);
-        log.info("Worker config: execThreads -> {}", execThreads);
-        log.info("Worker config: heartbeatInterval -> {}", heartbeatInterval);
-        log.info("Worker config: hostWeight -> {}", hostWeight);
-        log.info("Worker config: tenantAutoCreate -> {}", tenantAutoCreate);
-        log.info("Worker config: tenantDistributedUser -> {}", tenantDistributedUser);
-        log.info("Worker config: maxCpuLoadAvg -> {}", maxCpuLoadAvg);
-        log.info("Worker config: reservedMemory -> {}", reservedMemory);
-        log.info("Worker config: registryDisconnectStrategy -> {}", registryDisconnectStrategy);
-        log.info("Worker config: workerAddress -> {}", workerAddress);
-        log.info("Worker config: workerRegistryPath: {}", workerRegistryPath);
-        log.info("Worker config: taskExecuteThreadsFullPolicy: {}", taskExecuteThreadsFullPolicy);
+        String config =
+                "\n****************************Worker Configuration**************************************" +
+                        "\n  listen-port -> " + listenPort +
+                        "\n  max-heartbeat-interval -> " + maxHeartbeatInterval +
+                        "\n  host-weight -> " + hostWeight +
+                        "\n  tenantConfig -> " + tenantConfig +
+                        "\n  server-load-protection -> " + serverLoadProtection +
+                        "\n  address -> " + workerAddress +
+                        "\n  registry-path: " + workerRegistryPath +
+                        "\n  physical-task-config -> " + physicalTaskConfig +
+                        "\n  group -> " + group +
+                        "\n****************************Worker Configuration**************************************";
+        log.info(config);
     }
 }

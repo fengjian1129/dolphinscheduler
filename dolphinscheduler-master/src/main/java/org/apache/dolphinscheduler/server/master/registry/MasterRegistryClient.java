@@ -20,17 +20,17 @@ package org.apache.dolphinscheduler.server.master.registry;
 import static org.apache.dolphinscheduler.common.constants.Constants.SLEEP_TIME_MILLIS;
 
 import org.apache.dolphinscheduler.common.IStoppable;
+import org.apache.dolphinscheduler.common.enums.ServerStatus;
+import org.apache.dolphinscheduler.common.model.MasterHeartBeat;
 import org.apache.dolphinscheduler.common.thread.ThreadUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.common.utils.NetUtils;
+import org.apache.dolphinscheduler.meter.metrics.MetricsProvider;
 import org.apache.dolphinscheduler.registry.api.RegistryClient;
 import org.apache.dolphinscheduler.registry.api.RegistryException;
 import org.apache.dolphinscheduler.registry.api.enums.RegistryNodeType;
 import org.apache.dolphinscheduler.server.master.config.MasterConfig;
-import org.apache.dolphinscheduler.server.master.service.FailoverService;
-import org.apache.dolphinscheduler.server.master.task.MasterHeartBeatTask;
-
-import org.apache.commons.lang3.StringUtils;
+import org.apache.dolphinscheduler.server.master.engine.MasterCoordinator;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,27 +46,26 @@ import org.springframework.stereotype.Component;
 public class MasterRegistryClient implements AutoCloseable {
 
     @Autowired
-    private FailoverService failoverService;
-
-    @Autowired
     private RegistryClient registryClient;
 
     @Autowired
     private MasterConfig masterConfig;
 
     @Autowired
-    private MasterConnectStrategy masterConnectStrategy;
+    private MetricsProvider metricsProvider;
+
+    @Autowired
+    private MasterCoordinator masterCoordinator;
 
     private MasterHeartBeatTask masterHeartBeatTask;
 
     public void start() {
         try {
-            this.masterHeartBeatTask = new MasterHeartBeatTask(masterConfig, registryClient);
+            this.masterHeartBeatTask =
+                    new MasterHeartBeatTask(masterConfig, metricsProvider, registryClient, masterCoordinator);
             // master registry
             registry();
-            registryClient.addConnectionStateListener(
-                    new MasterConnectionStateListener(masterConfig, registryClient, masterConnectStrategy));
-            registryClient.subscribe(RegistryNodeType.ALL_SERVERS.getRegistryPath(), new MasterRegistryDataListener());
+            registryClient.addConnectionStateListener(new MasterConnectionStateListener(registryClient));
         } catch (Exception e) {
             throw new RegistryException("Master registry client start up error", e);
         }
@@ -79,71 +78,13 @@ public class MasterRegistryClient implements AutoCloseable {
     @Override
     public void close() {
         // TODO unsubscribe MasterRegistryDataListener
-        deregister();
-    }
-
-    /**
-     * remove master node path
-     *
-     * @param path     node path
-     * @param nodeType node type
-     * @param failover is failover
-     */
-    public void removeMasterNodePath(String path, RegistryNodeType nodeType, boolean failover) {
-        log.info("{} node deleted : {}", nodeType, path);
-
-        if (StringUtils.isEmpty(path)) {
-            log.error("server down error: empty path: {}, nodeType:{}", path, nodeType);
-            return;
+        if (masterHeartBeatTask != null) {
+            masterHeartBeatTask.shutdown();
         }
-
-        String serverHost = registryClient.getHostByEventDataPath(path);
-        if (StringUtils.isEmpty(serverHost)) {
-            log.error("server down error: unknown path: {}, nodeType:{}", path, nodeType);
-            return;
+        if (registryClient.isConnected()) {
+            deregister();
         }
-
-        try {
-            if (!registryClient.exists(path)) {
-                log.info("path: {} not exists", path);
-            }
-            // failover server
-            if (failover) {
-                failoverService.failoverServerWhenDown(serverHost, nodeType);
-            }
-        } catch (Exception e) {
-            log.error("{} server failover failed, host:{}", nodeType, serverHost, e);
-        }
-    }
-
-    /**
-     * remove worker node path
-     *
-     * @param path     node path
-     * @param nodeType node type
-     * @param failover is failover
-     */
-    public void removeWorkerNodePath(String path, RegistryNodeType nodeType, boolean failover) {
-        log.info("{} node deleted : {}", nodeType, path);
-        try {
-            String serverHost = null;
-            if (!StringUtils.isEmpty(path)) {
-                serverHost = registryClient.getHostByEventDataPath(path);
-                if (StringUtils.isEmpty(serverHost)) {
-                    log.error("server down error: unknown path: {}", path);
-                    return;
-                }
-                if (!registryClient.exists(path)) {
-                    log.info("path: {} not exists", path);
-                }
-            }
-            // failover server
-            if (failover) {
-                failoverService.failoverServerWhenDown(serverHost, nodeType);
-            }
-        } catch (Exception e) {
-            log.error("{} server failover failed", nodeType, e);
-        }
+        log.info("Closed MasterRegistryClient");
     }
 
     /**
@@ -152,6 +93,13 @@ public class MasterRegistryClient implements AutoCloseable {
     void registry() {
         log.info("Master node : {} registering to registry center", masterConfig.getMasterAddress());
         String masterRegistryPath = masterConfig.getMasterRegistryPath();
+
+        MasterHeartBeat heartBeat = masterHeartBeatTask.getHeartBeat();
+        while (ServerStatus.BUSY.equals(heartBeat.getServerStatus())) {
+            log.warn("Master node is BUSY: {}", heartBeat);
+            heartBeat = masterHeartBeatTask.getHeartBeat();
+            ThreadUtils.sleep(SLEEP_TIME_MILLIS);
+        }
 
         // remove before persist
         registryClient.remove(masterRegistryPath);
@@ -183,4 +131,7 @@ public class MasterRegistryClient implements AutoCloseable {
         }
     }
 
+    public boolean isAvailable() {
+        return registryClient.isConnected();
+    }
 }

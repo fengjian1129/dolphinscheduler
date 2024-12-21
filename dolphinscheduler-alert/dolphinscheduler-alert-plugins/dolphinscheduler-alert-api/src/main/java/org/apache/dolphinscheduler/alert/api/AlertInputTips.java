@@ -1,25 +1,25 @@
 /*
- * Licensed to Apache Software Foundation (ASF) under one or more contributor
- * license agreements. See the NOTICE file distributed with
- * this work for additional information regarding copyright
- * ownership. Apache Software Foundation (ASF) licenses this file to you under
- * the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.apache.dolphinscheduler.alert.api;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import org.springframework.context.i18n.LocaleContextHolder;
 
@@ -50,6 +50,13 @@ public enum AlertInputTips {
     SECRET("please input secret", "请输入secret"),
     WECHAT_MENTION_USERS("use `|` to separate userIds and `@all` to everyone", "使用`|`来分割userId或使用`@all`来提到所有人"),
     WECHAT_AGENT_ID("please input agent id or chat id", "请输入agent id或chat id"),
+    CALLED_NUMBER("please input called number", "请输入被叫电话号码"),
+    CALLED_SHOW_NUMBER("Please enter the call display number (the default number will be used if you do not fill in)",
+            "请输入呼叫显示号码(不填则使用默认号码)"),
+    TTS_CODE("please input tts code", "请输入语音模板编码"),
+    ALIYUN_VIICE_ADDRESS("please input aliyun viice address", "请输入阿里云访问域名"),
+    ALIYUN_VIICE_ACCESSKEYID("please input accessKeyId", "请输入accessKeyId"),
+    ALIYUN_VIICE_ACCESSKEY_SECRET("please input accessKeySecret", "请输入accessKeySecret"),
     ANNOTATION("please input annotation in json form", "请输入json格式的annotation"),
     GENERATOR_URL("please input Generator URL", "请输入生成地址");
 
@@ -67,5 +74,12 @@ public enum AlertInputTips {
         } else {
             return this.enMsg;
         }
+    }
+
+    public static Map<String, String> getAllMsg(AlertInputTips alertInputTips) {
+        Map<String, String> allMsgMap = new HashMap<>();
+        allMsgMap.put("zhMsg", alertInputTips.zhMsg);
+        allMsgMap.put("enMsg", alertInputTips.enMsg);
+        return allMsgMap;
     }
 }

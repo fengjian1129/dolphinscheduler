@@ -17,7 +17,7 @@
 
 package org.apache.dolphinscheduler.plugin.storage.api;
 
-import static org.apache.dolphinscheduler.common.constants.Constants.RESOURCE_STORAGE_TYPE;
+import static org.apache.dolphinscheduler.plugin.storage.api.constants.StorageConstants.RESOURCE_STORAGE_TYPE;
 
 import org.apache.dolphinscheduler.common.utils.PropertyUtils;
 
@@ -32,13 +32,13 @@ import org.springframework.context.annotation.Configuration;
 public class StorageConfiguration {
 
     @Bean
-    public StorageOperate storageOperate() {
+    public StorageOperator storageOperate() {
         Optional<StorageType> storageTypeOptional =
                 StorageType.getStorageType(PropertyUtils.getUpperCaseString(RESOURCE_STORAGE_TYPE));
-        Optional<StorageOperate> storageOperate = storageTypeOptional.map(storageType -> {
-            ServiceLoader<StorageOperateFactory> storageOperateFactories =
-                    ServiceLoader.load(StorageOperateFactory.class);
-            for (StorageOperateFactory storageOperateFactory : storageOperateFactories) {
+        Optional<StorageOperator> storageOperate = storageTypeOptional.map(storageType -> {
+            ServiceLoader<StorageOperatorFactory> storageOperateFactories =
+                    ServiceLoader.load(StorageOperatorFactory.class);
+            for (StorageOperatorFactory storageOperateFactory : storageOperateFactories) {
                 if (storageOperateFactory.getStorageOperate() == storageType) {
                     return storageOperateFactory.createStorageOperate();
                 }

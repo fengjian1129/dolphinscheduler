@@ -17,9 +17,11 @@
 
 package org.apache.dolphinscheduler.api.security.impl.ldap;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import org.apache.dolphinscheduler.api.controller.AbstractControllerTest;
+import org.apache.dolphinscheduler.api.dto.LdapLoginResult;
 import org.apache.dolphinscheduler.api.enums.Status;
 import org.apache.dolphinscheduler.api.security.LdapUserNotExistActionType;
 import org.apache.dolphinscheduler.api.service.SessionService;
@@ -80,11 +82,13 @@ public class LdapAuthenticatorTest extends AbstractControllerTest {
     private User mockUser;
     private Session mockSession;
 
-    private String ldapUid = "test";
-    private String ldapUserPwd = "password";
-    private String ldapEmail = "test@example.com";
-    private String ip = "127.0.0.1";
-    private UserType userType = UserType.GENERAL_USER;
+    private final String ldapUid = "test";
+    private final String ldapUserPwd = "password";
+    private final String ldapEmail = "test@example.com";
+    private final String ip = "127.0.0.1";
+    private final UserType userType = UserType.GENERAL_USER;
+    private final LdapLoginResult ldapLoginResultSuccess = new LdapLoginResult(true, ldapEmail, userType, ldapUid);
+    private final LdapLoginResult ldapLoginResultFailed = new LdapLoginResult(false, ldapEmail, userType, ldapUid);
 
     @Override
     @BeforeEach
@@ -108,8 +112,8 @@ public class LdapAuthenticatorTest extends AbstractControllerTest {
 
     @Test
     public void testAuthenticate() {
-        when(ldapService.ldapLogin(ldapUid, ldapUserPwd)).thenReturn(ldapEmail);
-        when(sessionService.createSession(Mockito.any(User.class), Mockito.eq(ip))).thenReturn(mockSession.getId());
+        when(ldapService.ldapLogin(ldapUid, ldapUserPwd)).thenReturn(ldapLoginResultSuccess);
+        when(sessionService.createSessionIfAbsent(Mockito.any(User.class))).thenReturn(mockSession);
 
         // test username pwd correct and user not exist, config user not exist action deny, so login denied
         when(ldapService.getLdapUserNotExistAction()).thenReturn(LdapUserNotExistActionType.DENY);
@@ -125,13 +129,14 @@ public class LdapAuthenticatorTest extends AbstractControllerTest {
         logger.info(result.toString());
 
         // test username pwd correct and user not exist, config action create but can't create session, so login failed
-        when(sessionService.createSession(Mockito.any(User.class), Mockito.eq(ip))).thenReturn(null);
+        when(sessionService.createSessionIfAbsent(Mockito.any(User.class))).thenReturn(null);
         result = ldapAuthenticator.authenticate(ldapUid, ldapUserPwd, ip);
         Assertions.assertEquals(Status.LOGIN_SESSION_FAILED.getCode(), (int) result.getCode());
 
         // test username pwd error, login failed
-        when(ldapService.ldapLogin(ldapUid, ldapUserPwd)).thenReturn(null);
-        result = ldapAuthenticator.authenticate(ldapUid, ldapUserPwd, ip);
+        when(sessionService.createSessionIfAbsent(Mockito.any(User.class))).thenReturn(mockSession);
+        when(ldapService.ldapLogin(ldapUid, "123")).thenReturn(ldapLoginResultFailed);
+        result = ldapAuthenticator.authenticate(ldapUid, "123", ip);
         Assertions.assertEquals(Status.USER_NAME_PASSWD_ERROR.getCode(), (int) result.getCode());
     }
 
@@ -139,12 +144,12 @@ public class LdapAuthenticatorTest extends AbstractControllerTest {
     public void testGetAuthUser() {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         when(usersService.queryUser(mockUser.getId())).thenReturn(mockUser);
-        when(sessionService.getSession(request)).thenReturn(mockSession);
+        when(sessionService.getSession(any())).thenReturn(mockSession);
 
         User user = ldapAuthenticator.getAuthUser(request);
         Assertions.assertNotNull(user);
 
-        when(sessionService.getSession(request)).thenReturn(null);
+        when(sessionService.getSession(any())).thenReturn(null);
         user = ldapAuthenticator.getAuthUser(request);
         Assertions.assertNull(user);
     }

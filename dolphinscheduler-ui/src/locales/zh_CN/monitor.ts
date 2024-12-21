@@ -35,6 +35,7 @@ export default {
     memory_usage: '内存使用量',
     disk_available: '磁盘可用容量',
     load_average: '平均负载量',
+    thread_pool_usage: '线程池使用量',
     create_time: '创建时间',
     last_heartbeat_time: '最后心跳时间',
     directory_detail: '目录详情',
@@ -43,6 +44,11 @@ export default {
     worker_no_data_result_title: 'Worker节点不存在',
     worker_no_data_result_desc:
       '目前没有任何Worker节点，请先创建Worker节点，再访问该页面'
+  },
+  alert_server: {
+    alert_server_no_data_result_title: 'Alert Server节点不存在',
+    alert_server_no_data_result_desc:
+      '目前没有任何Alert Server节点，请先创建Alert Server节点，再访问该页面'
   },
   db: {
     health_state: '健康状态',
@@ -53,14 +59,25 @@ export default {
     db_no_data_result_desc: '目前没有任何DB节点，请先创建DB节点，再访问该页面'
   },
   statistics: {
-    command_number_of_waiting_for_running: '待执行的命令数',
-    failure_command_number: '执行失败的命令数'
+    command_statistics_list: '命令统计列表',
+    failure_command_statistics_list: '失败命令统计列表',
+    command_type: '命令类型',
+    command_param: '命令参数',
+    task_info: '任务信息',
+    task_params: '任务参数',
+    worker_info: 'Worker信息',
+    warning_info: '警告信息',
+    executor_id: '执行用户Id',
+    message: '错误信息',
+    time: '时间'
   },
   audit_log: {
     user_name: '用户名称',
-    resource_type: '资源类型',
-    project_name: '项目名称',
     operation_type: '操作类型',
+    model_type: '模型类型',
+    model_name: '模型名称',
+    latency: '耗时',
+    description: '描述',
     create_time: '创建时间',
     start_time: '开始时间',
     end_time: '结束时间',

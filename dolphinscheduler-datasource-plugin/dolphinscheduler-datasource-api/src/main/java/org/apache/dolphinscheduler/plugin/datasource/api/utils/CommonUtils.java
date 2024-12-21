@@ -18,18 +18,17 @@
 package org.apache.dolphinscheduler.plugin.datasource.api.utils;
 
 import static org.apache.dolphinscheduler.common.constants.Constants.RESOURCE_STORAGE_TYPE;
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.DATA_QUALITY_JAR_NAME;
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.HADOOP_SECURITY_AUTHENTICATION;
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.HADOOP_SECURITY_AUTHENTICATION_STARTUP_STATE;
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.JAVA_SECURITY_KRB5_CONF;
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.JAVA_SECURITY_KRB5_CONF_PATH;
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.KERBEROS;
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.LOGIN_USER_KEY_TAB_PATH;
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.LOGIN_USER_KEY_TAB_USERNAME;
-import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.RESOURCE_UPLOAD_PATH;
+import static org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants.HADOOP_SECURITY_AUTHENTICATION;
+import static org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants.HADOOP_SECURITY_AUTHENTICATION_STARTUP_STATE;
+import static org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants.JAVA_SECURITY_KRB5_CONF;
+import static org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants.JAVA_SECURITY_KRB5_CONF_PATH;
+import static org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants.KERBEROS;
+import static org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants.LOGIN_USER_KEY_TAB_PATH;
+import static org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants.LOGIN_USER_KEY_TAB_USERNAME;
+import static org.apache.dolphinscheduler.plugin.datasource.api.constants.DataSourceConstants.RESOURCE_UPLOAD_PATH;
 
 import org.apache.dolphinscheduler.common.constants.Constants;
-import org.apache.dolphinscheduler.common.enums.ResUploadType;
+import org.apache.dolphinscheduler.common.enums.StorageType;
 import org.apache.dolphinscheduler.common.utils.PropertyUtils;
 
 import org.apache.commons.lang3.StringUtils;
@@ -38,9 +37,12 @@ import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * common utils
  */
+@Slf4j
 public class CommonUtils {
 
     private CommonUtils() {
@@ -63,9 +65,9 @@ public class CommonUtils {
      */
     public static boolean getKerberosStartupState() {
         String resUploadStartupType = PropertyUtils.getUpperCaseString(RESOURCE_STORAGE_TYPE);
-        ResUploadType resUploadType = ResUploadType.valueOf(resUploadStartupType);
+        StorageType storageType = StorageType.valueOf(resUploadStartupType);
         Boolean kerberosStartupState = PropertyUtils.getBoolean(HADOOP_SECURITY_AUTHENTICATION_STARTUP_STATE, false);
-        return resUploadType == ResUploadType.HDFS && kerberosStartupState;
+        return storageType == StorageType.HDFS && kerberosStartupState;
     }
 
     /**
@@ -121,26 +123,6 @@ public class CommonUtils {
             return true;
         }
         return false;
-    }
-
-    public static String getDataQualityJarName() {
-        String dqsJarName = PropertyUtils.getString(DATA_QUALITY_JAR_NAME);
-
-        if (StringUtils.isEmpty(dqsJarName)) {
-            return "dolphinscheduler-data-quality.jar";
-        }
-
-        return dqsJarName;
-    }
-
-    /**
-     * hdfs udf dir
-     *
-     * @param tenantCode tenant code
-     * @return get udf dir on hdfs
-     */
-    public static String getHdfsUdfDir(String tenantCode) {
-        return String.format("%s/udfs", getHdfsTenantDir(tenantCode));
     }
 
     /**

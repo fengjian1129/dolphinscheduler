@@ -15,12 +15,15 @@
  * limitations under the License.
  */
 
-import { ref, onMounted, Ref, isRef } from 'vue'
+import { ref, onMounted, Ref, isRef, h } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { queryResourceList } from '@/service/modules/resources'
 import { useTaskNodeStore } from '@/store/project/task-node'
 import utils from '@/utils'
 import type { IJsonItem, IResource } from '../types'
+import { NButton, NIcon, NTag } from 'naive-ui'
+import { CopyOutlined } from '@vicons/antd'
+import { useClipboard } from '@vueuse/core'
 
 export function useResources(
   span: number | Ref<number> = 24,
@@ -29,10 +32,21 @@ export function useResources(
 ): IJsonItem {
   const { t } = useI18n()
 
-  const resourcesOptions = ref([] as IResource[])
+  interface ResourceOption {
+    name: string
+    fullName: string
+    dirctory: boolean
+    disable: boolean
+    children?: ResourceOption[]
+  }
+
+  const resourcesOptions = ref<ResourceOption[] | IResource[]>([])
   const resourcesLoading = ref(false)
 
   const taskStore = useTaskNodeStore()
+
+  const source = ref('Hello')
+  const { copy, isSupported } = useClipboard({ source })
 
   const getResources = async () => {
     if (taskStore.resources.length) {
@@ -48,6 +62,76 @@ export function useResources(
     taskStore.updateResource(res)
   }
 
+  const validateResourceExist = (
+    fullName: string,
+    parentDir: string[],
+    resources: ResourceOption[]
+  ): boolean => {
+    const isDirectory = (res: ResourceOption): boolean => {
+      return res.dirctory && new RegExp(`^${res.fullName}`).test(fullName)
+    }
+
+    const processDirectory = (res: ResourceOption): boolean => {
+      if (!res.children) {
+        res.children = []
+      }
+      parentDir.push(res.name)
+      return validateResourceExist(
+        fullName,
+        parentDir,
+        res.children as ResourceOption[]
+      )
+    }
+
+    if (resources.length > 0) {
+      for (const res of resources) {
+        if (isDirectory(res)) {
+          return processDirectory(res)
+        }
+
+        if (res.fullName === fullName) {
+          return true
+        }
+      }
+    }
+    addResourceNode(fullName, parentDir, resources)
+    return false
+  }
+
+  const addResourceNode = (
+    fullName: string,
+    parentDir: string[],
+    resources: ResourceOption[]
+  ) => {
+    const resourceNode = {
+      fullName: fullName,
+      name: getResourceDirAfter(fullName, parentDir),
+      dirctory: false,
+      disable: true
+    }
+    resources.push(resourceNode)
+  }
+
+  const getResourceDirAfter = (fullName: string, parentDir: string[]) => {
+    const dirctory = '/resources/' + parentDir.join('')
+    const delimiterIndex = fullName.indexOf(dirctory)
+    if (delimiterIndex !== -1) {
+      return fullName.substring(delimiterIndex + dirctory.length)
+    } else {
+      return fullName
+    }
+  }
+
+  const copyResourceName = async (name: string) => {
+    if (isSupported.value) {
+      event?.stopPropagation()
+      await copy(name)
+      window.$message.success(t('project.node.copy_success'))
+    } else {
+      window.$message.error(t('project.node.copy_failed'))
+    }
+  }
+
   onMounted(() => {
     getResources()
   })
@@ -55,6 +139,7 @@ export function useResources(
   return {
     type: 'tree-select',
     field: 'resourceList',
+    class: 'resource-select',
     name: t('project.node.resources'),
     span: span,
     options: resourcesOptions,
@@ -69,18 +154,81 @@ export function useResources(
       placeholder: t('project.node.resources_tips'),
       keyField: 'fullName',
       labelField: 'name',
-      loading: resourcesLoading
+      disabledField: 'disable',
+      loading: resourcesLoading,
+      'render-tag': ({
+        option,
+        handleClose
+      }: {
+        option: any
+        handleClose: any
+      }) => {
+        return h(
+          NTag,
+          {
+            type: 'success',
+            closable: true,
+            onClose: () => {
+              handleClose()
+            }
+          },
+          {
+            default: () => option.currentDir,
+            avatar: () =>
+              h(
+                NButton,
+                {
+                  tag: 'div',
+                  type: 'info',
+                  size: 'tiny',
+                  onClick: () => copyResourceName(option.currentDir)
+                },
+                {
+                  icon: () =>
+                    h(NIcon, null, {
+                      default: () => h(CopyOutlined)
+                    })
+                }
+              )
+          }
+        )
+      }
     },
     validate: {
-      trigger: ['input', 'blur'],
+      trigger: ['blur'],
       required: required,
-      validator(validate: any, value: IResource[]) {
+      validator(validate: any, value: string[]) {
+        if (value) {
+          const errorNames: string[] = []
+          value.forEach((item) => {
+            if (
+              !validateResourceExist(
+                item,
+                [],
+                resourcesOptions.value as ResourceOption[]
+              )
+            ) {
+              errorNames.push(item)
+            }
+          })
+          if (errorNames.length > 0) {
+            let errorName = ': '
+            errorNames.forEach((name) => {
+              value.splice(value.indexOf(name), 1)
+              errorName += getResourceDirAfter(name, []) + ';'
+            })
+            return new Error(
+              t('project.node.useless_resources_tips') + errorName
+            )
+          }
+        }
+
         if (isRef(required) ? required.value : required) {
           if (!value || value.length == 0) {
             return new Error(t('project.node.resources_tips'))
           }
-
-          if (limit > 0 && value.length > limit) {
+          const limit_ = isRef(limit) ? limit.value : limit
+          if (limit_ > 0 && value.length > limit_) {
             return new Error(t('project.node.resources_limit_tips') + limit)
           }
         }

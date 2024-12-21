@@ -28,6 +28,8 @@ import java.lang.annotation.Target;
 @Documented
 public @interface RpcMethod {
 
-    long timeout() default 3000L;
+    long timeout() default -1;
+
+    RpcMethodRetryStrategy retry() default @RpcMethodRetryStrategy;
 
 }
